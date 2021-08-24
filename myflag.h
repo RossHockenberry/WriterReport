@@ -6,8 +6,8 @@ class myflag
 {
 public:
 
-    myflag(bool bInitial = false);
-    ~myflag();
+    myflag() {bStateFlag = false; };
+    ~myflag() {};
 
     bool        Is() { SetTrue(); return bStateFlag; }
     bool        SetTrue() { bStateFlag = true; return true; }

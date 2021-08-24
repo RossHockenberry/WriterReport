@@ -107,7 +107,6 @@
 #include <QColorDialog>
 #include <QColormap>
 #include <windows.h>
-//#include "libpq-fe.h"
 
 //  Okay, some macros.
 #define POUT(text)(std::cout << text << std::endl)

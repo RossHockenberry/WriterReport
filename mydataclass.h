@@ -23,6 +23,21 @@ struct stResultData
      int             iPosKey;            //  Position in table or subset of table.
  };
 
+ struct stColumnData
+ {
+     std::string                 sColumnName;
+     int                         iDataType;
+ };
+
+ struct stTableData
+ {
+     std::string                 sTableName;
+     int                         iNumberColumns;
+     int                         iPrimaryKey;    //  PK of the table.  Assuming single column or now.
+     std::vector<stColumnData>   vColumnData;    //  Column data.
+
+ };
+
 //----------------------------------------------------------------------------------
 //  Class begins.
 class MyDataClass : public QObject
@@ -34,15 +49,15 @@ public:
 
 //  Object Functions.
     void            InitObject();
-    bool            SetDatabaseItems(std::string &);
     bool            SetDatabaseItems();
-
+    bool            OnCreate();                 //  Where all the init stuff gets called.
 //  Open, Close and Info functions.
     void            SetDatabaseInfo();      //  Set connection string stuff.
     bool            OpenDatabase();
     bool            CloseDatabase();
     bool            GetDatabaseTables();
     int             NumberDatabaseTables() {return iNumberTables; }
+    bool            IsDatabaseOpen() { return oOpenFlag.Is(); }
 
 //  Handle queries.
 //  Might use a signal to say if someone changed something in database.
@@ -61,32 +76,18 @@ private:
 //    QSqlResult      oResult;
 
 //  Database Connection Info.
+    std::string     sDBConnection;      //  String with all the connection info.
     std::string     sDBName;
     std::string     sDBHost;
     std::string     sDBAddress;
     std::string     sDBPort;
     std::string     sDBUser;
     std::string     sDBPassword;
+    std::string     sDBDriver;
 
 //  Other Database stuff.
     myflag          oOpenFlag;
     int             iNumberTables = -1;         //  -1 means not open yet.
-
-    struct stColumnData
-    {
-        std::string                 sColumnName;
-        int                         iDataType;
-    };
-
-    struct stTableData
-    {
-        std::string                 sTableName;
-        int                         iNumberColumns;
-        int                         iPrimaryKey;    //  PK of the table.  Assuming single column or now.
-        std::vector<stColumnData>   vColumnData;    //  Column data.
-
-    };
-
 
 
 };

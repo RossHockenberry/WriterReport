@@ -2,7 +2,9 @@
 #define MLOCAL_H
 
 #include "mainwindow.h"
-#include "mdataobject.h"
+#include "mydataclass.h"
+#include "reportwindow.h"
+
 //#include "simplemessagebox.h"
 //#include "settingsdialog.h"
 //#include "meditordialog.h"
