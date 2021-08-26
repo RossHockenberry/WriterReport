@@ -3,8 +3,21 @@
 
 #include "myinclude.h"
 #include "mlocal.h"
+#include "myflag.h"
+class MyFlag;
 
+struct stReportType
+{
+    std::string     sCode;
+    std::string     sName;
+};
 
+struct stTypeData
+ {
+     int             iKey;
+     std::string     sKeyString;
+     int             iPosKey;            //  Position in table or subset of table.
+ };
 
 class MainWindow : public QMainWindow
 {
@@ -18,7 +31,14 @@ public:
 //  General Functions.
     bool        InitObject();
     bool        InitWidgets();
+    bool        SetLayouts();
     bool        SetSlots();
+    void        UpdateStatus(const char *,ulong  iTime = 0);
+    bool        FillStoryList();
+
+//  Report Functions.
+    bool        ClearReportData();
+    bool        FillReportList();
 
 //  Database Functions.
     bool        OpenDatabase();
@@ -28,11 +48,38 @@ public:
     bool        IsDatabaseError();
     std::string ReturnDatabaseError();
 
+//  Some public data.
+    MainWindow      *   pParent;
+
 private:
+//  Layouts.
+    QVBoxLayout     *   pWindowLayout;
+    QHBoxLayout     *   pReportListLayout;
+    QHBoxLayout     *   pReportDetailLayout;
+    QHBoxLayout     *   pButtonLayout;
+
+//  Widgets.
+    QWidget         *   pCentralWidget;
+    QPushButton     *   pCloseButton;
+    QPushButton     *   pExecuteButton;
+    QPushButton     *   pCancelButton;
+
+    QListWidget     *   pReportList;
+    QListWidget     *   pStoryList;
+    QLabel          *   pSelectedStory;
+    QLabel          *   pSelectedReport;
+    QLabel          *   pSelectedStoryLabel;
+    QLabel          *   pSelectedReportLabel;
+
+//  Misc.
     QStatusBar      *   pStatusBar;
     QTextDocument   *   pHeader;
     QTextDocument   *   pReport;
     QTextDocument   *   pFooter;
+
+//  A vector container for report names and codes.
+    std::vector<stReportType>   vReports;
+    std::vector<stTypeData>     vStorys;
 
 //  Database stuff.
     QSqlDatabase    oDb;        //  No copy constructor problem.
@@ -54,7 +101,10 @@ private:
     int             iReturnRows     = -1;
 
 public slots:
-
-
+    void            CloseButton();
+    void            CancelButton();
+    void            ExecuteButton();
+    void            StoryDoubleClicked(QListWidgetItem *);
+    void            ReportDoubleClicked(QListWidgetItem *);
 };
 #endif // MAINWINDOW_H

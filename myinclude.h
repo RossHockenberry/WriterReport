@@ -67,6 +67,7 @@
 #include <QTextDocumentFragment>
 #include <QTextList>
 #include <QTextListFormat>
+#include <QThread>
 
 #include <QSettings>
 #include <QSql>
