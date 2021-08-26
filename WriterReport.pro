@@ -13,11 +13,9 @@ QT    += printsupport
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    mydataclass.cpp \
     reportwindow.cpp
 
 HEADERS += \
-    mydataclass.h \
     myinclude.h \
     mlocal.h \
     mainwindow.h \

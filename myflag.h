@@ -2,12 +2,12 @@
 #define MYFLAG_H
 
 
-class myflag
+class MyFlag
 {
 public:
 
-    myflag() {bStateFlag = false; };
-    ~myflag() {};
+    MyFlag() {bStateFlag = false; };
+    ~MyFlag() {};
 
     bool        Is() { SetTrue(); return bStateFlag; }
     bool        SetTrue() { bStateFlag = true; return true; }

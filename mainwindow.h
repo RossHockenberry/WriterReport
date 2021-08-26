@@ -1,8 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-class MyDataClass;
+#include "myinclude.h"
+#include "mlocal.h"
+
+
 
 class MainWindow : public QMainWindow
 {
@@ -18,10 +20,38 @@ public:
     bool        InitWidgets();
     bool        SetSlots();
 
+//  Database Functions.
+    bool        OpenDatabase();
+    bool        CloseDatabase();
+    bool        GetDatabaseTables();
+    int         TableCount();
+    bool        IsDatabaseError();
+    std::string ReturnDatabaseError();
+
 private:
     QStatusBar      *   pStatusBar;
+    QTextDocument   *   pHeader;
+    QTextDocument   *   pReport;
+    QTextDocument   *   pFooter;
 
-    MyDataClass     *   pDb;
+//  Database stuff.
+    QSqlDatabase    oDb;        //  No copy constructor problem.
+    QSqlDatabase    *   pDatabase;
+
+//  Database Connection Info.
+    std::string     sDBConnection;      //  String with all the connection info.
+    std::string     sDBName;
+    std::string     sDBHost;
+    std::string     sDBAddress;
+    std::string     sDBPort;
+    std::string     sDBUser;
+    std::string     sDBPassword;
+    std::string     sDBDriver;
+
+//  Other Database stuff.
+    MyFlag          oOpenFlag;
+    int             iNumberTables   = -1;         //  -1 means not open yet.
+    int             iReturnRows     = -1;
 
 public slots:
 

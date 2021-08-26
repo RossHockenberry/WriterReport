@@ -2,8 +2,8 @@
 #define MLOCAL_H
 
 #include "mainwindow.h"
-#include "mydataclass.h"
 #include "reportwindow.h"
+#include "myflag.h"
 
 //#include "simplemessagebox.h"
 //#include "settingsdialog.h"
