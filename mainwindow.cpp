@@ -55,7 +55,7 @@ bool MainWindow::InitWidgets()
 
         pCentralWidget      =   new QWidget(this);
 //  Create Layouts.
-        pWindowLayout       =   new QVBoxLayout(this);
+        pWindowLayout       =   new QVBoxLayout();  //  Okay, don't set a parent here?
         pReportListLayout   =   new QHBoxLayout;
         pReportDetailLayout =   new QHBoxLayout;
         pButtonLayout       =   new QHBoxLayout;
@@ -63,13 +63,18 @@ bool MainWindow::InitWidgets()
 //  Create Buttons.
         pCloseButton        =   new QPushButton("Close");
         pCancelButton       =   new QPushButton("Cancel");
-        pExecuteButton      =   new QPushButton("Execyte");
+        pExecuteButton      =   new QPushButton("Execute");
 
 //  Create Labels.
         pSelectedStoryLabel     =   new QLabel("Selected Story");
         pSelectedStory          =   new QLabel(" ");
+        pSelectedStory->setFrameStyle(QFrame::Panel  | QFrame::Sunken);
+        pSelectedStory->setLineWidth(2);
+
         pSelectedReportLabel    =   new QLabel("Selected Report");
         pSelectedReport         =   new QLabel(" ");
+        pSelectedReport->setFrameStyle(QFrame::Panel |  QFrame::Sunken);
+        pSelectedReport->setLineWidth(2);   //  Add some depth to our sunken lables.
 
 //  Create Listbox.
         pReportList         =   new QListWidget();
@@ -138,12 +143,34 @@ bool MainWindow::FillStoryList()
         QSqlQuery oQ("SELECT story_id , name FROM story");
         while(oQ.next())
         {
+            stData.iPosKey = 0;
             oVariant = oQ.value(0);
             stData.iKey = oVariant.toInt();
             oVariant = oQ.value(1);
             stData.sKeyString = oVariant.toString().toStdString();
             pStoryList->addItem(oVariant.toString());
             vStorys.push_back(stData);              //  In the container.
+        }
+
+        return true;
+}
+
+bool MainWindow::FillReportList()
+{
+    QVariant    oVariant;
+    stTypeData  stData;
+
+        vReports.clear();        //  In case we have to recall???
+        QSqlQuery oQ("SELECT id , name FROM reports ORDER BY id");
+        while(oQ.next())
+        {
+            stData.iPosKey = 0;
+            oVariant = oQ.value(0);
+            stData.iKey = oVariant.toInt();
+            oVariant = oQ.value(1);
+            stData.sKeyString = oVariant.toString().toStdString();
+            pReportList->addItem(oVariant.toString());
+            vReports.push_back(stData);              //  In the container.
         }
 
         return true;
@@ -223,24 +250,6 @@ bool MainWindow::ClearReportData()
         return true;
 }
 
-bool MainWindow::FillReportList()
-{
-    stReportType    stType;
-
-        stType.sCode = "SSL";
-        stType.sName = "Story Scene List";
-        vReports.push_back(stType);
-
-        stType.sCode = "CL";
-        stType.sName = "Character List";
-        vReports.push_back(stType);
-
-        for(auto & it : vReports)
-            pReportList->addItem(it.sName.c_str());
-
-        return true;
-}
-
 //-----------------------------------------------------------------------
 //  Reports
 //-----------------------------------------------------------------------
@@ -254,14 +263,31 @@ void MainWindow::CloseButton()
         return;;
 }
 
+//  Okay, let's cancel and clear everything.
 void MainWindow::CancelButton()
 {
+        pSelectedStory->clear();
+        pSelectedReport->clear();
+        iSelectedStory  = 0;
+        iSelectedReport = 0;
+        pStoryList->setCurrentRow(0);
+        pReportList->setCurrentRow(0);
 
         return;;
 }
 
+//  Okay, let's do the report.
 void MainWindow::ExecuteButton()
 {
+        switch(iSelectedReport + 1)         //  Adding the 1 to offset listwidget index.
+        {
+            case    1:
+                FullCharacterReport();
+                break;
+
+            default:
+                break;
+        }
 
         return;;
 }
@@ -271,17 +297,62 @@ void MainWindow::ExecuteButton()
 //------------------------------------------------------------------------
 void MainWindow::StoryDoubleClicked(QListWidgetItem * pItem)
 {
-    Q_UNUSED(pItem);
+        sSelectedStory = pItem->text().toStdString();
+
+        for(auto & it : vStorys)
+            if(it.sKeyString == sSelectedStory)
+                iSelectedStory = it.iKey;
+
+        pSelectedStory->setText(sSelectedStory.c_str());
 
         return;
 }
 
 void MainWindow::ReportDoubleClicked(QListWidgetItem * pItem)
 {
-    Q_UNUSED(pItem);
+        sSelectedReport = pItem->text().toStdString();
+
+        for(auto & it : vStorys)
+            if(it.sKeyString == sSelectedReport)
+                iSelectedReport = it.iKey;
+
+        pSelectedReport->setText(sSelectedReport.c_str());
         return;
 }
 
+//------------------------------------------------------------------------
+//  Actual Reports
+//------------------------------------------------------------------------
+bool MainWindow::FullCharacterReport()
+{
+    QString sBuild;
+
+        pReport     =   new QTextDocument();
+        QSqlQuery oQ(QString("SELECT DISTINCT  c.used_name , c.first_name , c.last_name , "
+                            " c.age , c.sex ,c.physical_desc "
+                            " FROM scene AS s INNER JOIN scene_char_link AS scl ON "
+                            " s.scene_id = scl.scene_id INNER JOIN character AS c ON "
+                            " c.char_id = scl.char_id"));    // WHERE s.story_id = %1")
+//                            .arg(std::to_string(iSelectedStory).c_str()));
+
+        while(oQ.next())
+        {
+            sBuild.clear();
+            sBuild +=   oQ.value("used_name").toString() +="<br>";
+            sBuild +=   oQ.value("physical_desc").toString() +="<br>";
+//            pReport->setPlainText(sBuild);
 
 
+/*
+            stData.iPosKey = 0;
+            oVariant = oQ.value(0);
+            stData.iKey = oVariant.toInt();
+            oVariant = oQ.value(1);
+            stData.sKeyString = oVariant.toString().toStdString();
+            pStoryList->addItem(oVariant.toString());
+            vStorys.push_back(stData);              //  In the container.*/
+        }
+
+        return true;            //  Report finished.
+}
 

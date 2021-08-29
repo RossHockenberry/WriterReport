@@ -9,13 +9,10 @@
 #include "myinclude.h"
 #include "mlocal.h"
 
-//  Have to initialize out reference value here of course.
-//  May want to copy the textdoc if we decide to leave report windows
-//  laying around.
-ReportWindow::ReportWindow(QTextDocument & rTextDocument,QWidget *parent)
-                            : QWidget(parent) ,  rText(rTextDocument)
+ReportWindow::ReportWindow(QTextDocument * pDocument , QWidget *parent)
+            : QWidget(parent) , pParentDoc(pDocument) ,
+              pParent(dynamic_cast<MainWindow *>(parent))
 {
-
         return;
 }
 
@@ -26,6 +23,24 @@ ReportWindow::~ReportWindow()
 
 bool ReportWindow::OnCreate()
 {
-
+        InitObject();
         return true;
+}
+
+bool ReportWindow::InitObject()
+{
+        pMainView       =   new QTextEdit();
+        pReport         =   new QTextDocument();
+
+        pReport->setHtml(pParentDoc->toHtml());     //  Copy the report.
+        return true;
+}
+
+void ReportWindow::SetText()
+{
+        pMainView->setMarkdown(pReport->toMarkdown());
+//        pEditor->setFont(oEditorFont);
+//        pCursor->movePosition(QTextCursor::End);    //  Put the cursor at the end.
+//        pEditor->setTextCursor(*pCursor);
+        return;
 }

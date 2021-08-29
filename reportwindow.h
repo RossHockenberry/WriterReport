@@ -3,19 +3,28 @@
 
 #include "myinclude.h"
 
+class MainWindow;
 class ReportWindow : public QWidget
 {
     Q_OBJECT
 public:
-    explicit        ReportWindow(QTextDocument & ,QWidget *parent = nullptr);
+    explicit        ReportWindow(QTextDocument * ,QWidget *parent = nullptr);
     virtual         ~ReportWindow();
     virtual bool    OnCreate();
-    void            GetScreenData();        //  Get the screen data.
+
 
 signals:
 
 private:
-    QTextDocument   &   rText;
+    void            GetScreenData();        //  Get the screen data.
+    bool            InitObject();
+    bool            SetLayout();
+    void            SetText();
+
+    QTextDocument   *   pParentDoc;
+    MainWindow      *   pParent;
+    QTextDocument   *   pReport;
+
     QTextEdit       *   pMainView;
     QVBoxLayout     *   pLayout;
 };

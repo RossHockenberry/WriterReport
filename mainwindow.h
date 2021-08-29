@@ -48,6 +48,9 @@ public:
     bool        IsDatabaseError();
     std::string ReturnDatabaseError();
 
+//  Actual Reports.
+    bool        FullCharacterReport();
+
 //  Some public data.
     MainWindow      *   pParent;
 
@@ -78,8 +81,13 @@ private:
     QTextDocument   *   pFooter;
 
 //  A vector container for report names and codes.
-    std::vector<stReportType>   vReports;
+    std::vector<stTypeData>     vReports;
+    std::string                 sSelectedReport;
+    int                         iSelectedReport = 0;
+
     std::vector<stTypeData>     vStorys;
+    std::string                 sSelectedStory;
+    int                         iSelectedStory = 0;
 
 //  Database stuff.
     QSqlDatabase    oDb;        //  No copy constructor problem.
