@@ -328,31 +328,55 @@ bool MainWindow::FullCharacterReport()
     QString sBuild;
 
         pReport     =   new QTextDocument();
-        QSqlQuery oQ(QString("SELECT DISTINCT  c.used_name , c.first_name , c.last_name , "
-                            " c.age , c.sex ,c.physical_desc "
-                            " FROM scene AS s INNER JOIN scene_char_link AS scl ON "
-                            " s.scene_id = scl.scene_id INNER JOIN character AS c ON "
-                            " c.char_id = scl.char_id"));    // WHERE s.story_id = %1")
-//                            .arg(std::to_string(iSelectedStory).c_str()));
+        QString sS(QString("SELECT DISTINCT  c.used_name ,"
+                                " c.first_name ,"
+                                " c.middle_name ,"
+                                " c.last_name , "
+                                " c.age ,"
+                                " sex.name ,"
+                                " c.physical_desc ,"
+                                " c.family_name ,"
+                                " c.job ,"
+                                " c.description ,"
+                                " c.skills ,"
+                                " c.personality ,"
+                                " c.life_intent ,"
+                                " c.seen_as ,"
+                                " c.history ,"
+                                " sex_pref.name "
+                                " FROM scene AS s "
+                                " INNER JOIN scene_char_link AS scl ON s.scene_id = scl.scene_id "
+                                " INNER JOIN character AS c ON c.char_id = scl.char_id"
+                                " INNER JOIN sex ON sex.id = c.sex"
+                                " INNER JOIN sex_pref ON sex_pref.id = c.sex_pref"));
+//POUT(sS.toStdString());
+        QSqlQuery oQ(sS);
+        sBuild.clear();
 
-        while(oQ.next())
+        while(oQ.next()) // && iC < 2)
         {
-            sBuild.clear();
-            sBuild +=   oQ.value("used_name").toString() +="<br>";
-            sBuild +=   oQ.value("physical_desc").toString() +="<br>";
-//            pReport->setPlainText(sBuild);
 
+            sBuild +=   QString("<b>" + oQ.value("used_name").toString() + "</b>    Age = ");
+            sBuild +=   oQ.value("age").toString() + "   Sex = ";
+            sBuild +=   oQ.value("sex.name").toString() + "     Sexual Pref = ";
+            sBuild +=   oQ.value("sex_pref.name").toString() + "      Full Name = ";
+            sBuild +=   oQ.value("first_name").toString() + " ";
+            sBuild +=   oQ.value("middle_name").toString() + " ";
+            sBuild +=   oQ.value("last_name").toString() + "           Family Name =";
+            sBuild +=   oQ.value("family_name").toString() + "     \n";
+            sBuild +=   oQ.value("physical_desc").toString() + " \n";
+            sBuild +=   oQ.value("description").toString() + " \n";
+            sBuild +=   oQ.value("skills").toString() + " \n";
+            sBuild +=   oQ.value("history").toString() + " \n \n";
 
-/*
-            stData.iPosKey = 0;
-            oVariant = oQ.value(0);
-            stData.iKey = oVariant.toInt();
-            oVariant = oQ.value(1);
-            stData.sKeyString = oVariant.toString().toStdString();
-            pStoryList->addItem(oVariant.toString());
-            vStorys.push_back(stData);              //  In the container.*/
+//            sBuild +=   " \n \n";
         }
 
+        pReport->setPlainText(sBuild);
+
+        ReportWindow  *  pRW = new ReportWindow(pReport , this);
+        pRW->OnCreate();
+        pRW->showMaximized();
         return true;            //  Report finished.
 }
 

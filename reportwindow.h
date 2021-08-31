@@ -10,7 +10,7 @@ class ReportWindow : public QWidget
 public:
     explicit        ReportWindow(QTextDocument * ,QWidget *parent = nullptr);
     virtual         ~ReportWindow();
-    virtual bool    OnCreate();
+    bool            OnCreate();
 
 
 signals:
@@ -18,15 +18,18 @@ signals:
 private:
     void            GetScreenData();        //  Get the screen data.
     bool            InitObject();
-    bool            SetLayout();
-    void            SetText();
 
     QTextDocument   *   pParentDoc;
     MainWindow      *   pParent;
     QTextDocument   *   pReport;
-
+    QPushButton     *   pCloseButton;
+    QPushButton     *   pPrintButton;
     QTextEdit       *   pMainView;
     QVBoxLayout     *   pLayout;
+    QHBoxLayout     *   pButtonLayout;
+
+public slots:
+    bool            PrintReport();
 };
 
 #endif // REPORTWINDOW_H
