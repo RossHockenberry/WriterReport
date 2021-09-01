@@ -16,8 +16,6 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
-        pParent =   static_cast<MainWindow *>(parent);
-
         resize(800,400);    //  Just to work with for now.
         return;
 }
@@ -160,7 +158,7 @@ bool MainWindow::FillReportList()
     QVariant    oVariant;
     stTypeData  stData;
 
-        vReports.clear();        //  In case we have to recall???
+        vReports.clear();
         QSqlQuery oQ("SELECT id , name FROM reports ORDER BY id");
         while(oQ.next())
         {
@@ -174,6 +172,59 @@ bool MainWindow::FillReportList()
         }
 
         return true;
+}
+
+bool MainWindow::GetPlaceList()
+{
+    QVariant    oVariant;
+    stTypeData  stData;
+
+        vPlaces.clear();        //  In case we have to recall???
+        QSqlQuery oQ("SELECT place_id , name FROM place ORDER BY place_id");
+        while(oQ.next())
+        {
+            stData.iPosKey = 0;
+            oVariant = oQ.value(0);
+            stData.iKey = oVariant.toInt();
+            oVariant = oQ.value(1);
+            stData.sKeyString = oVariant.toString().toStdString();
+            pReportList->addItem(oVariant.toString());
+            vPlaces.push_back(stData);              //  In the container.
+        }
+
+        return true;
+}
+
+bool MainWindow::GetIdeasList()
+{
+    QVariant    oVariant;
+    stTypeData  stData;
+
+        vPlaces.clear();        //  In case we have to recall???
+        QSqlQuery oQ("SELECT place_id , name FROM ideas ORDER BY ideas_id");
+        while(oQ.next())
+        {
+            stData.iPosKey = 0;
+            oVariant = oQ.value(0);
+            stData.iKey = oVariant.toInt();
+            oVariant = oQ.value(1);
+            stData.sKeyString = oVariant.toString().toStdString();
+            pReportList->addItem(oVariant.toString());
+            vIdeas.push_back(stData);              //  In the container.
+        }
+
+        return true;
+}
+
+std::string MainWindow::ReturnTypeName(int iTemp , std::vector<stTypeData> & vType)
+{
+        for(auto & it : vType)
+        {
+            if( it.iKey == iTemp)
+                return it.sKeyString;
+        }
+
+        return "";
 }
 
 //-----------------------------------------------------------------------
@@ -256,6 +307,15 @@ bool MainWindow::InsertDivider()
         return true;
 }
 
+bool MainWindow::CreateReportWindow(QTextDocument & oTD , std::string sName)
+{
+        ReportWindow  *  pRW = new ReportWindow(&oTD , sName , this);
+        pRW->OnCreate();
+        pRW->showMaximized();
+
+        return true;
+}
+
 //-----------------------------------------------------------------------
 //  Reports
 //-----------------------------------------------------------------------
@@ -285,24 +345,27 @@ void MainWindow::CancelButton()
 //  Okay, let's do the report.
 void MainWindow::ExecuteButton()
 {
-        if((iSelectedStory) > 0 && (iSelectedReport) > 0)
+        if(iSelectedReport > 0)
         {
             switch(iSelectedReport)         //  Adding the 1 to offset listwidget index.
             {
                 case    1:
                     FullCharacterReport();
                     break;
-
                 case    2:
                     FullSceneReport();
                     break;
-
                 case    3:
                     FullPlaceReport();
                     break;
-
-                default:
+                case    4:
+                    FullIdeasReport();
                     break;
+                case    5:
+                    FullWorldsReport();
+                    break;
+                default:
+                break;
             }
         }
         return;
@@ -387,15 +450,13 @@ POUT(sS.toStdString());
             sBuild +=   oQ.value("description").toString() + " \n";
             sBuild +=   oQ.value("skills").toString() + " \n";
             sBuild +=   oQ.value("history").toString();
-            sBuild.append("<br><br>");
+            sBuild.append("<br>=============================================================<br>");
 
             oCursor.insertText(sBuild);
             sBuild.clear();
         }
 
-        ReportWindow  *  pRW = new ReportWindow(&oReport , this);
-        pRW->OnCreate();
-        pRW->showMaximized();
+        CreateReportWindow(oReport , "Characters");
         return true;            //  Report finished.
 }
 
@@ -424,17 +485,13 @@ POUT(sBuild.toStdString());
             sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
             sBuild +=   "Conditions = " + oQ.value("conditions").toString() + "<br>";
             sBuild +=   "Purpose = " + oQ.value("purpose").toString() + "<br>";
-
-            sBuild.append("<br><br>");
+            sBuild.append("<br>=============================================================<br>");
 
             oCursor.insertText(sBuild);
             sBuild.clear();
         }
 
-        ReportWindow  *  pRW = new ReportWindow(&oReport , this);
-        pRW->OnCreate();
-        pRW->showMaximized();
-
+        CreateReportWindow(oReport , "Scenes");
         return true;
 }
 
@@ -447,35 +504,104 @@ bool MainWindow::FullPlaceReport()
         sBuild = "SELECT  p.name , "
                     " p.description , "
                     " p.history , "
-                    " pt.name "
+                    " pt.name , "
+                    " p.parent_id"
                     " FROM place as p "
                     " INNER JOIN place_types as pt ON p.place_type = pt.id"
                     " ORDER BY p.place_type";
 
-//  Add this later when head is clear.
-//        if(iSelectedStory)
-//            aBuild     " WHERE s.story_id = %1")
-//                                .arg(std::to_string(iSelectedStory).c_str());
-//  Right now leaving out name of parent place.!!!!!!
-
 POUT(sBuild.toStdString());
         QSqlQuery oQ(sBuild);
         sBuild.clear();
+        GetPlaceList();
 
+//  Build the Report String.
         while(oQ.next())
         {
             sBuild +=   "<b>" + oQ.value("name").toString() + "</b>  ";
             sBuild +=   "Place Type = " + oQ.value("place_types.name").toString() + "<br>";
             sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
             sBuild +=   "History = " + oQ.value("history").toString() + "<br>";
-             sBuild.append("<br><br>");
+            QString oT = ReturnTypeName(oQ.value("parent_id").toInt() , vPlaces).c_str();
+            sBuild +=   "Parent Place = " + oT + "<br>";
+            sBuild.append("<br>=============================================================<br>");
 
             oCursor.insertText(sBuild);
             sBuild.clear();
         }
 
-        ReportWindow  *  pRW = new ReportWindow(&oReport , this);
-        pRW->OnCreate();
-        pRW->showMaximized();
+        CreateReportWindow(oReport , "Places");
+        return true;
+}
+
+bool MainWindow::FullIdeasReport()
+{
+    QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
+
+        sBuild = "SELECT  i.name , "
+                    " i.description , "
+                    " i.origin_date , "
+                    " i.type , "
+                    " i.parent_id"
+                    " FROM ideas as i "
+                    " ORDER BY i.idea_id";
+
+POUT(sBuild.toStdString());
+        QSqlQuery oQ(sBuild);
+        sBuild.clear();
+        GetIdeasList();
+
+//  Build the report string.
+        while(oQ.next())
+        {
+            sBuild +=   "<b> " + oQ.value("name").toString() + " </b>  ";
+            sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
+            sBuild +=   "Type = " + oQ.value("history").toString() + "<br>";
+            sBuild +=   "Origin Date = " + oQ.value("history").toString() + "<br>";
+            QString oT = ReturnTypeName(oQ.value("parent_id").toInt() , vIdeas).c_str();
+            sBuild +=   "Parent Idea = " + oT + "<br>";
+             sBuild.append("<br>=============================================================<br>");
+
+            oCursor.insertText(sBuild);
+            sBuild.clear();
+        }
+
+        CreateReportWindow(oReport , "Ideas");
+        return true;
+}
+
+bool MainWindow::FullWorldsReport()
+{
+    QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
+
+        sBuild = "SELECT  w.name , "
+                    " w.description , "
+                    " w.origin_date , "
+                    " w.special_things "
+                    " FROM world as w "
+                    " ORDER BY w.world_id";
+
+POUT(sBuild.toStdString());
+        QSqlQuery oQ(sBuild);
+        sBuild.clear();
+
+//  Build the report string.
+        while(oQ.next())
+        {
+            sBuild +=   "<b> " + oQ.value("name").toString() + " </b>  ";
+            sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
+            sBuild +=   "Special Things = " + oQ.value("history").toString() + "<br>";
+            sBuild +=   "Origin Date = " + oQ.value("history").toString() + "<br>";
+            sBuild.append("<br>=============================================================<br>");
+
+            oCursor.insertText(sBuild);
+            sBuild.clear();
+        }
+
+        CreateReportWindow(oReport , "Worlds");
         return true;
 }

@@ -9,10 +9,12 @@
 #include "myinclude.h"
 #include "mlocal.h"
 
-ReportWindow::ReportWindow(QTextDocument * pDocument , QWidget *parent)
+ReportWindow::ReportWindow(QTextDocument * pDocument , std::string sName, QWidget *parent)
             : QWidget(parent , Qt::Window) , pParentDoc(pDocument) ,
               pParent(dynamic_cast<MainWindow *>(parent))
 {
+        setWindowTitle(sName.c_str());
+        resize(1000 , 1000);    //  Just a starting size.
         return;
 }
 

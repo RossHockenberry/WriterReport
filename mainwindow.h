@@ -26,36 +26,43 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    bool        OnCreate();
+    bool            OnCreate();
 
 //  General Functions.
-    bool        InitObject();
-    bool        InitWidgets();
-    bool        SetLayouts();
-    bool        SetSlots();
-    void        UpdateStatus(const char *,ulong  iTime = 0);
-    bool        FillStoryList();
+    bool            InitObject();
+    bool            InitWidgets();
+    bool            SetLayouts();
+    bool            SetSlots();
+    void            UpdateStatus(const char *,ulong  iTime = 0);
+    bool            FillStoryList();
 
 //  Report Functions.
-    bool        ClearReportData();
-    bool        FillReportList();
-    bool        InsertDivider();        //  Could be a frame, blank line, etc.
+    bool            ClearReportData();
+    bool            FillReportList();
+    bool            GetPlaceList();
+    bool            GetIdeasList();
+    bool            GetWorldsList();
+    bool            InsertDivider();        //  Could be a frame, blank line, etc.
+    bool            CreateReportWindow(QTextDocument & , std::string);
+    std::string     ReturnTypeName(int , std::vector<stTypeData> &);//  Some public data.
 
 //  Database Functions.
-    bool        OpenDatabase();
-    bool        CloseDatabase();
-    bool        GetDatabaseTables();
-    int         TableCount();
-    bool        IsDatabaseError();
-    std::string ReturnDatabaseError();
+    bool            OpenDatabase();
+    bool            CloseDatabase();
+    bool            GetDatabaseTables();
+    int             TableCount();
+    bool            IsDatabaseError();
+    std::string     ReturnDatabaseError();
 
 //  Actual Reports.
-    bool        FullCharacterReport();
-    bool        FullSceneReport();
-    bool        FullPlaceReport();
-
-//  Some public data.
-    MainWindow      *   pParent;
+    bool            FullCharacterReport();
+    bool            FullSceneReport();
+    bool            FullPlaceReport();
+    bool            FullIdeasReport();
+    bool            FullWorldsReport();
+//    bool            FullStoriesReport();
+//    bool            FullThingsReport();
+//    bool            FullDBHistoryReport();
 
 private:
 //  Layouts.
@@ -88,6 +95,13 @@ private:
     std::vector<stTypeData>     vStorys;
     std::string                 sSelectedStory;
     int                         iSelectedStory = 0;
+
+    std::vector<stTypeData>     vPlaces;
+    std::vector<stTypeData>     vIdeas;
+    std::vector<stTypeData>     vWorlds;
+    std::vector<stTypeData>     vSagas;
+    std::vector<stTypeData>     vThings;
+    std::vector<stTypeData>     vDBHistory;
 
 //  Database stuff.
     QSqlDatabase    oDb;        //  No copy constructor problem.

@@ -8,7 +8,7 @@ class ReportWindow : public QWidget
 {
     Q_OBJECT
 public:
-    explicit        ReportWindow(QTextDocument * ,QWidget *parent = nullptr);
+    explicit        ReportWindow(QTextDocument * , std::string , QWidget *parent = nullptr);
     virtual         ~ReportWindow();
     bool            OnCreate();
 
