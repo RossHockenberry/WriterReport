@@ -250,6 +250,12 @@ bool MainWindow::ClearReportData()
         return true;
 }
 
+bool MainWindow::InsertDivider()
+{
+
+        return true;
+}
+
 //-----------------------------------------------------------------------
 //  Reports
 //-----------------------------------------------------------------------
@@ -279,17 +285,27 @@ void MainWindow::CancelButton()
 //  Okay, let's do the report.
 void MainWindow::ExecuteButton()
 {
-        switch(iSelectedReport + 1)         //  Adding the 1 to offset listwidget index.
+        if((iSelectedStory) > 0 && (iSelectedReport) > 0)
         {
-            case    1:
-                FullCharacterReport();
-                break;
+            switch(iSelectedReport)         //  Adding the 1 to offset listwidget index.
+            {
+                case    1:
+                    FullCharacterReport();
+                    break;
 
-            default:
-                break;
+                case    2:
+                    FullSceneReport();
+                    break;
+
+                case    3:
+                    FullPlaceReport();
+                    break;
+
+                default:
+                    break;
+            }
         }
-
-        return;;
+        return;
 }
 
 //------------------------------------------------------------------------
@@ -312,7 +328,7 @@ void MainWindow::ReportDoubleClicked(QListWidgetItem * pItem)
 {
         sSelectedReport = pItem->text().toStdString();
 
-        for(auto & it : vStorys)
+        for(auto & it : vReports)
             if(it.sKeyString == sSelectedReport)
                 iSelectedReport = it.iKey;
 
@@ -326,8 +342,9 @@ void MainWindow::ReportDoubleClicked(QListWidgetItem * pItem)
 bool MainWindow::FullCharacterReport()
 {
     QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
 
-        pReport     =   new QTextDocument();
         QString sS(QString("SELECT DISTINCT  c.used_name ,"
                                 " c.first_name ,"
                                 " c.middle_name ,"
@@ -347,9 +364,11 @@ bool MainWindow::FullCharacterReport()
                                 " FROM scene AS s "
                                 " INNER JOIN scene_char_link AS scl ON s.scene_id = scl.scene_id "
                                 " INNER JOIN character AS c ON c.char_id = scl.char_id"
+                                " INNER JOIN scene as sc ON sc.scene_id = scl.scene_id"
                                 " INNER JOIN sex ON sex.id = c.sex"
-                                " INNER JOIN sex_pref ON sex_pref.id = c.sex_pref"));
-//POUT(sS.toStdString());
+                                " INNER JOIN sex_pref ON sex_pref.id = c.sex_pref"
+                                " WHERE sc.story_id = %1").arg(iSelectedStory));
+POUT(sS.toStdString());
         QSqlQuery oQ(sS);
         sBuild.clear();
 
@@ -367,16 +386,96 @@ bool MainWindow::FullCharacterReport()
             sBuild +=   oQ.value("physical_desc").toString() + " \n";
             sBuild +=   oQ.value("description").toString() + " \n";
             sBuild +=   oQ.value("skills").toString() + " \n";
-            sBuild +=   oQ.value("history").toString() + " \n \n";
+            sBuild +=   oQ.value("history").toString();
+            sBuild.append("<br><br>");
 
-//            sBuild +=   " \n \n";
+            oCursor.insertText(sBuild);
+            sBuild.clear();
         }
 
-        pReport->setPlainText(sBuild);
-
-        ReportWindow  *  pRW = new ReportWindow(pReport , this);
+        ReportWindow  *  pRW = new ReportWindow(&oReport , this);
         pRW->OnCreate();
         pRW->showMaximized();
         return true;            //  Report finished.
 }
 
+bool MainWindow::FullSceneReport()
+{
+    QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
+
+        sBuild = QString("SELECT s.name , "
+                                " p.name , "
+                                " s.description ,"
+                                " s.purpose "
+                                " FROM scene as s "
+                                " INNER JOIN place as p ON p.place_id = s.place_id "
+                                "WHERE s.story_id = %1")
+                                .arg(std::to_string(iSelectedStory).c_str());
+
+POUT(sBuild.toStdString());
+        QSqlQuery oQ(sBuild);
+        sBuild.clear();
+
+        while(oQ.next())
+        {
+            sBuild +=   QString("<b>" + oQ.value("name").toString() + "</b><br>");
+            sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
+            sBuild +=   "Conditions = " + oQ.value("conditions").toString() + "<br>";
+            sBuild +=   "Purpose = " + oQ.value("purpose").toString() + "<br>";
+
+            sBuild.append("<br><br>");
+
+            oCursor.insertText(sBuild);
+            sBuild.clear();
+        }
+
+        ReportWindow  *  pRW = new ReportWindow(&oReport , this);
+        pRW->OnCreate();
+        pRW->showMaximized();
+
+        return true;
+}
+
+bool MainWindow::FullPlaceReport()
+{
+    QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
+
+        sBuild = "SELECT  p.name , "
+                    " p.description , "
+                    " p.history , "
+                    " pt.name "
+                    " FROM place as p "
+                    " INNER JOIN place_types as pt ON p.place_type = pt.id"
+                    " ORDER BY p.place_type";
+
+//  Add this later when head is clear.
+//        if(iSelectedStory)
+//            aBuild     " WHERE s.story_id = %1")
+//                                .arg(std::to_string(iSelectedStory).c_str());
+//  Right now leaving out name of parent place.!!!!!!
+
+POUT(sBuild.toStdString());
+        QSqlQuery oQ(sBuild);
+        sBuild.clear();
+
+        while(oQ.next())
+        {
+            sBuild +=   "<b>" + oQ.value("name").toString() + "</b>  ";
+            sBuild +=   "Place Type = " + oQ.value("place_types.name").toString() + "<br>";
+            sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
+            sBuild +=   "History = " + oQ.value("history").toString() + "<br>";
+             sBuild.append("<br><br>");
+
+            oCursor.insertText(sBuild);
+            sBuild.clear();
+        }
+
+        ReportWindow  *  pRW = new ReportWindow(&oReport , this);
+        pRW->OnCreate();
+        pRW->showMaximized();
+        return true;
+}

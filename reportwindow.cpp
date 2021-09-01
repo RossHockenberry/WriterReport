@@ -30,6 +30,8 @@ bool ReportWindow::OnCreate()
 bool ReportWindow::InitObject()
 {
         pMainView       =   new QTextEdit();
+        pMainView->setAcceptRichText(false);
+
         pReport         =   new QTextDocument();
         pCloseButton    =   new QPushButton("Close");
         pPrintButton    =   new QPushButton("Print");
@@ -45,20 +47,24 @@ bool ReportWindow::InitObject()
 
         connect(pCloseButton , &QPushButton::clicked , this , &ReportWindow::close);
         connect(pPrintButton , &QPushButton::clicked , this , &ReportWindow::PrintReport);
-        pMainView->setMarkdown(pReport->toPlainText()); //Markdown());
+        pMainView->setHtml(pReport->toMarkdown());
+//        pMainView->setMarkdown(pReport->toPlainText());
         return true;
 }
 
 bool ReportWindow::PrintReport()
 {
-    QString         sBuild = pMainView->toPlainText();
-    QTextDocument   oText(sBuild);
+//    QString         sBuild = pMainView->toPlainText();
+    QString         sBuild = pMainView->toHtml();
+    QTextDocument   oText; //(sBuild);
 
         QPrinter oPrinter(QPrinter::PrinterResolution);
+        oPrinter.setOutputFormat(QPrinter::NativeFormat);
         QPrintDialog oPrintDialog(&oPrinter,this);
         oPrintDialog.exec();
         oPrinter.setPageOrientation(QPageLayout::Landscape);
         oPrinter.setDuplex(QPrinter::DuplexLongSide);
+        oText.setHtml(sBuild);
         oText.print(&oPrinter);
         return true;
 }

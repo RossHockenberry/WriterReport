@@ -39,6 +39,7 @@ public:
 //  Report Functions.
     bool        ClearReportData();
     bool        FillReportList();
+    bool        InsertDivider();        //  Could be a frame, blank line, etc.
 
 //  Database Functions.
     bool        OpenDatabase();
@@ -50,6 +51,8 @@ public:
 
 //  Actual Reports.
     bool        FullCharacterReport();
+    bool        FullSceneReport();
+    bool        FullPlaceReport();
 
 //  Some public data.
     MainWindow      *   pParent;
@@ -76,9 +79,6 @@ private:
 
 //  Misc.
     QStatusBar      *   pStatusBar;
-    QTextDocument   *   pHeader;
-    QTextDocument   *   pReport;
-    QTextDocument   *   pFooter;
 
 //  A vector container for report names and codes.
     std::vector<stTypeData>     vReports;
