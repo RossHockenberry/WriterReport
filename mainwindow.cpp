@@ -16,13 +16,51 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
-        resize(800,400);    //  Just to work with for now.
+        resize(1600,1000);    //  Just to work with for now.
         return;
 }
 
 MainWindow::~MainWindow()
 {
         return;
+}
+
+void MainWindow::GetScreenData()
+{
+    QString sT;
+    QSize   oSize;
+
+        QRect oRect = this->screen()->availableGeometry();
+
+        iScreenHeight       = oRect.height();
+        iScreenWidth        = oRect.width();
+
+        oSize = size();
+        sT = QString("Available Height = %1 Width %2 --- Current Size = %3 %4").arg(oRect.height()).arg(oRect.width())
+                    .arg(oSize.width()).arg(oSize.height());
+        statusBar()->showMessage(sT);
+
+        return;
+}
+
+bool MainWindow::LoadSettings()
+{
+//    QString sKey("EditorFont");
+
+        pSettings->sync();
+        *pKeyList = pSettings->allKeys();
+
+        sDBName     = pSettings->value("DBName").toString().toStdString();
+        sDBHost     = pSettings->value("DBHost").toString().toStdString();
+        sDBAddress  = pSettings->value("DBAddress").toString().toStdString();
+        sDBPort     = pSettings->value("DBPort").toString().toStdString();
+        sDBUser     = pSettings->value("DBUser").toString().toStdString();
+        sDBPassword = pSettings->value("DBPassword").toString().toStdString();
+
+//        oEditorFont = pSettings->value(sKey).value<QFont>();
+//        bFullScreenFlag = pSettings->value("FullScreen").toBool();
+
+        return true;
 }
 
 bool MainWindow::OnCreate()
@@ -33,8 +71,12 @@ bool MainWindow::OnCreate()
 
 bool MainWindow::InitObject()
 {
+        pSettings   =   new QSettings(this);
+        pKeyList    =   new QStringList();
+
         pStatusBar = statusBar();   //  Create a status bar.
         UpdateStatus("Start Initialization");
+        LoadSettings();             //  Must be written by WriterData first.
         if(!OpenDatabase())         //  No point sticking around yet.
             close();
         InitWidgets();
@@ -216,6 +258,27 @@ bool MainWindow::GetIdeasList()
         return true;
 }
 
+bool MainWindow::GetSagasList()
+{
+    QVariant    oVariant;
+    stTypeData  stData;
+
+        vPlaces.clear();        //  In case we have to recall???
+        QSqlQuery oQ("SELECT saga_id , name FROM saga ORDER BY saga_id");
+        while(oQ.next())
+        {
+            stData.iPosKey = 0;
+            oVariant = oQ.value(0);
+            stData.iKey = oVariant.toInt();
+            oVariant = oQ.value(1);
+            stData.sKeyString = oVariant.toString().toStdString();
+            pReportList->addItem(oVariant.toString());
+            vSagas.push_back(stData);              //  In the container.
+        }
+
+        return true;
+}
+
 std::string MainWindow::ReturnTypeName(int iTemp , std::vector<stTypeData> & vType)
 {
         for(auto & it : vType)
@@ -235,12 +298,12 @@ bool MainWindow::OpenDatabase()
         UpdateStatus("Opening Database",3);
 
 //  For now we'll just set things manually.
-        sDBName         =   "writers_database";
+/*        sDBName         =   "writers_database";
         sDBHost         =   "marai";
         sDBAddress      =   "192.168.1.3";
         sDBPort         =   "5432";
         sDBUser         =   "pi";
-        sDBPassword     =   "pi";
+        sDBPassword     =   "pi";*/
         sDBDriver       =   "QPSQL";
 
         oDb   =   QSqlDatabase::addDatabase(sDBDriver.c_str()); // Set the database driver.
@@ -364,7 +427,18 @@ void MainWindow::ExecuteButton()
                 case    5:
                     FullWorldsReport();
                     break;
-                default:
+                case    6:
+                    FullStoriesReport();
+                    break;
+                case    7:
+                    FullSagasReport();
+                    break;
+                case    8:
+                    FullThingsReport();
+                case    9:
+                    FullDBHistoryReport();
+                    break;
+                    default:
                 break;
             }
         }
@@ -423,6 +497,7 @@ bool MainWindow::FullCharacterReport()
                                 " c.life_intent ,"
                                 " c.seen_as ,"
                                 " c.history ,"
+                                " c.origin_date , "
                                 " sex_pref.name "
                                 " FROM scene AS s "
                                 " INNER JOIN scene_char_link AS scl ON s.scene_id = scl.scene_id "
@@ -438,19 +513,21 @@ POUT(sS.toStdString());
         while(oQ.next()) // && iC < 2)
         {
 
-            sBuild +=   QString("<b>" + oQ.value("used_name").toString() + "</b>    Age = ");
+            sBuild +=   QString("<b> " + oQ.value("used_name").toString() + " </b>    Age = ");
             sBuild +=   oQ.value("age").toString() + "   Sex = ";
             sBuild +=   oQ.value("sex.name").toString() + "     Sexual Pref = ";
             sBuild +=   oQ.value("sex_pref.name").toString() + "      Full Name = ";
             sBuild +=   oQ.value("first_name").toString() + " ";
             sBuild +=   oQ.value("middle_name").toString() + " ";
-            sBuild +=   oQ.value("last_name").toString() + "           Family Name =";
-            sBuild +=   oQ.value("family_name").toString() + "     \n";
-            sBuild +=   oQ.value("physical_desc").toString() + " \n";
-            sBuild +=   oQ.value("description").toString() + " \n";
-            sBuild +=   oQ.value("skills").toString() + " \n";
-            sBuild +=   oQ.value("history").toString();
-            sBuild.append("<br>=============================================================<br>");
+            sBuild +=   oQ.value("last_name").toString() + "           Family Name = ";
+            sBuild +=   oQ.value("family_name").toString() + "<br>";
+            sBuild +=   oQ.value("physical_desc").toString() + "<br>";
+            sBuild +=   oQ.value("description").toString() + "<br>";
+            sBuild +=   oQ.value("skills").toString() + "<br>";
+            sBuild +=   oQ.value("history").toString() + "<br>";
+            QDateTime   oD = oQ.value("origin_date").toDateTime();
+            sBuild +=   "Origin Date = " + oD.toString() + "<br>";
+            sBuild +=   "<br>" + oSeperator + "<br>";
 
             oCursor.insertText(sBuild);
             sBuild.clear();
@@ -469,10 +546,12 @@ bool MainWindow::FullSceneReport()
         sBuild = QString("SELECT s.name , "
                                 " p.name , "
                                 " s.description ,"
-                                " s.purpose "
+                                " s.purpose ,"
+                                " s.origin_date "
                                 " FROM scene as s "
                                 " INNER JOIN place as p ON p.place_id = s.place_id "
-                                "WHERE s.story_id = %1")
+                                " WHERE s.story_id = %1"
+                                " ORDER BY s.sequence ")
                                 .arg(std::to_string(iSelectedStory).c_str());
 
 POUT(sBuild.toStdString());
@@ -485,7 +564,9 @@ POUT(sBuild.toStdString());
             sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
             sBuild +=   "Conditions = " + oQ.value("conditions").toString() + "<br>";
             sBuild +=   "Purpose = " + oQ.value("purpose").toString() + "<br>";
-            sBuild.append("<br>=============================================================<br>");
+            QDateTime   oD = oQ.value("origin_date").toDateTime();
+            sBuild +=   "Origin Date = " + oD.toString() + "<br>";
+            sBuild +=   "<br>" + oSeperator + "<br>";
 
             oCursor.insertText(sBuild);
             sBuild.clear();
@@ -505,7 +586,8 @@ bool MainWindow::FullPlaceReport()
                     " p.description , "
                     " p.history , "
                     " pt.name , "
-                    " p.parent_id"
+                    " p.origin_date ,"
+                    " p.parent_id "
                     " FROM place as p "
                     " INNER JOIN place_types as pt ON p.place_type = pt.id"
                     " ORDER BY p.place_type";
@@ -524,7 +606,9 @@ POUT(sBuild.toStdString());
             sBuild +=   "History = " + oQ.value("history").toString() + "<br>";
             QString oT = ReturnTypeName(oQ.value("parent_id").toInt() , vPlaces).c_str();
             sBuild +=   "Parent Place = " + oT + "<br>";
-            sBuild.append("<br>=============================================================<br>");
+            QDateTime   oD = oQ.value("origin_date").toDateTime();
+            sBuild +=   "Origin Date = " + oD.toString() + "<br>";
+            sBuild +=   "<br>" + oSeperator + "<br>";
 
             oCursor.insertText(sBuild);
             sBuild.clear();
@@ -544,6 +628,7 @@ bool MainWindow::FullIdeasReport()
                     " i.description , "
                     " i.origin_date , "
                     " i.type , "
+                    " i.origin_date"
                     " i.parent_id"
                     " FROM ideas as i "
                     " ORDER BY i.idea_id";
@@ -562,7 +647,9 @@ POUT(sBuild.toStdString());
             sBuild +=   "Origin Date = " + oQ.value("history").toString() + "<br>";
             QString oT = ReturnTypeName(oQ.value("parent_id").toInt() , vIdeas).c_str();
             sBuild +=   "Parent Idea = " + oT + "<br>";
-             sBuild.append("<br>=============================================================<br>");
+            QDateTime   oD = oQ.value("origin_date").toDateTime();
+            sBuild +=   "Origin Date = " + oD.toString() + "<br>";
+            sBuild.append("<br>=============================================================<br>");
 
             oCursor.insertText(sBuild);
             sBuild.clear();
@@ -577,6 +664,7 @@ bool MainWindow::FullWorldsReport()
     QString sBuild;
     QTextDocument   oReport;
     QTextCursor oCursor(&oReport);
+    QDateTime   oD;
 
         sBuild = "SELECT  w.name , "
                     " w.description , "
@@ -594,14 +682,158 @@ POUT(sBuild.toStdString());
         {
             sBuild +=   "<b> " + oQ.value("name").toString() + " </b>  ";
             sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
-            sBuild +=   "Special Things = " + oQ.value("history").toString() + "<br>";
-            sBuild +=   "Origin Date = " + oQ.value("history").toString() + "<br>";
-            sBuild.append("<br>=============================================================<br>");
+            sBuild +=   "Special Things = " + oQ.value("special_things").toString() + "<br>";
+            sBuild +=   "Origin Date = ";
+            oD = oQ.value("origin_date").toDateTime();
+            sBuild +=   oD.toString() + "<br>";
+            sBuild +=   "<br>" + oSeperator + "<br>";
 
             oCursor.insertText(sBuild);
             sBuild.clear();
         }
 
         CreateReportWindow(oReport , "Worlds");
+        return true;
+}
+
+bool MainWindow::FullStoriesReport()
+{
+    QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
+
+        sBuild = "SELECT  s.name , "
+                    " s.description , "
+                    " s.origin_date , "
+                    " s.outline , "
+                    " s.saga_id ,"
+                    " s.word_count "
+                    " FROM story as s "
+                    " ORDER BY s.story_id";
+
+POUT(sBuild.toStdString());
+        QSqlQuery oQ(sBuild);
+        sBuild.clear();
+
+//  Build the report string.
+        while(oQ.next())
+        {
+            sBuild +=   "<b> " + oQ.value("name").toString() + " </b>  ";
+            sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
+            sBuild +=   "Outline = " + oQ.value("outline").toString() + "<br>";
+            QString     oT = ReturnTypeName(oQ.value("saga_id").toInt() , vSagas).c_str();
+            sBuild +=   "Outline = " + oT + "<br>";
+            QDateTime   oD = oQ.value("origin_date").toDateTime();
+            sBuild +=   "Origin Date = " + oD.toString() + "<br>";
+            sBuild +=   "<br>" + oSeperator + "<br>";
+
+            oCursor.insertText(sBuild);
+            sBuild.clear();
+        }
+
+        CreateReportWindow(oReport , "Stories");
+        return true;
+}
+
+bool MainWindow::FullSagasReport()
+{
+    QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
+
+        sBuild = "SELECT  s.name , "
+                    " s.description , "
+                    " s.origin_date , "
+                    " s.history  "
+                    " FROM saga as s "
+                    " ORDER BY s.saga_id";
+
+POUT(sBuild.toStdString());
+        QSqlQuery oQ(sBuild);
+        sBuild.clear();
+
+//  Build the report string.
+        while(oQ.next())
+        {
+            sBuild +=   "<b> " + oQ.value("name").toString() + " </b>  ";
+            sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
+            sBuild +=   "History = " + oQ.value("history").toString() + "<br>";
+            QDateTime   oD = oQ.value("origin_date").toDateTime();
+            sBuild +=   "Origin Date = " + oD.toString() + "<br>";
+            sBuild +=   "<br>" + oSeperator + "<br>";
+
+            oCursor.insertText(sBuild);
+            sBuild.clear();
+        }
+
+        CreateReportWindow(oReport , "Sagas");
+        return true;
+}
+
+bool MainWindow::FullThingsReport()
+{
+    QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
+
+        sBuild = "SELECT  t.name , "
+                    " t.description , "
+                    " t.origin_date , "
+                    " t.purpose  "
+                    " FROM thing as t "
+                    " ORDER BY t.thing_id";
+
+POUT(sBuild.toStdString());
+        QSqlQuery oQ(sBuild);
+        sBuild.clear();
+
+//  Build the report string.
+        while(oQ.next())
+        {
+            sBuild +=   "<b> " + oQ.value("name").toString() + " </b>  <br>";
+            sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
+            sBuild +=   "Purpose = " + oQ.value("history").toString() + "<br>";
+            QDateTime   oD = oQ.value("origin_date").toDateTime();
+            sBuild +=   "Origin Date = " + oD.toString() + "<br>";
+            sBuild +=   "<br>" + oSeperator + "<br>";
+
+            oCursor.insertText(sBuild);
+            sBuild.clear();
+        }
+
+        CreateReportWindow(oReport , "Things");
+        return true;
+}
+
+bool MainWindow::FullDBHistoryReport()
+{
+    QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
+
+        sBuild = "SELECT  d.version , "
+                    " d.description , "
+                    " d.origin_date  "
+                    " FROM db_history as d "
+                    " ORDER BY d.id";
+
+POUT(sBuild.toStdString());
+        QSqlQuery oQ(sBuild);
+        sBuild.clear();
+
+//  Build the report string.
+        while(oQ.next())
+        {
+            sBuild +=   "<b> " + oQ.value("version").toString() + " </b>  <br>";
+            sBuild +=   "Description = " + oQ.value("description").toString();
+            QDateTime   oD = oQ.value("origin_date").toDateTime();
+            sBuild +=   "Origin Date = " + oD.toString() + "<br>";
+            sBuild +=   "<br>" + oSeperator + "<br>";
+
+            oCursor.insertText(sBuild);
+            sBuild.clear();
+        }
+
+        CreateReportWindow(oReport , "Wrter Application History");
         return true;
 }

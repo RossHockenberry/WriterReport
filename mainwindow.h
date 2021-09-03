@@ -34,6 +34,8 @@ public:
     bool            SetLayouts();
     bool            SetSlots();
     void            UpdateStatus(const char *,ulong  iTime = 0);
+    void            GetScreenData();
+    bool            LoadSettings();
     bool            FillStoryList();
 
 //  Report Functions.
@@ -42,6 +44,7 @@ public:
     bool            GetPlaceList();
     bool            GetIdeasList();
     bool            GetWorldsList();
+    bool            GetSagasList();
     bool            InsertDivider();        //  Could be a frame, blank line, etc.
     bool            CreateReportWindow(QTextDocument & , std::string);
     std::string     ReturnTypeName(int , std::vector<stTypeData> &);//  Some public data.
@@ -60,9 +63,10 @@ public:
     bool            FullPlaceReport();
     bool            FullIdeasReport();
     bool            FullWorldsReport();
-//    bool            FullStoriesReport();
-//    bool            FullThingsReport();
-//    bool            FullDBHistoryReport();
+    bool            FullStoriesReport();
+    bool            FullSagasReport();
+    bool            FullThingsReport();
+    bool            FullDBHistoryReport();
 
 private:
 //  Layouts.
@@ -85,7 +89,16 @@ private:
     QLabel          *   pSelectedReportLabel;
 
 //  Misc.
+    QSettings       *   pSettings;
     QStatusBar      *   pStatusBar;
+    QStringList     *   pKeyList;
+
+//  Seperator.
+    QString         oSeperator{100 , '='};
+
+//  Other stuff.
+    int                         iScreenHeight;
+    int                         iScreenWidth;
 
 //  A vector container for report names and codes.
     std::vector<stTypeData>     vReports;
@@ -119,6 +132,11 @@ private:
 
 //  Other Database stuff.
     MyFlag          oOpenFlag;
+    MyFlag          oStoryFlag;
+    MyFlag          oCharacterFlag;
+    MyFlag          oSceneFlag;
+    MyFlag          oReportFlag;
+
     int             iNumberTables   = -1;         //  -1 means not open yet.
     int             iReturnRows     = -1;
 
