@@ -116,10 +116,62 @@ bool MainWindow::InitWidgets()
         pSelectedReport->setFrameStyle(QFrame::Panel |  QFrame::Sunken);
         pSelectedReport->setLineWidth(2);   //  Add some depth to our sunken lables.
 
+        pSelectedTypeLabel    =   new QLabel("Selected Item");
+        pSelectedType         =   new QLabel(" ");
+        pSelectedType->setVisible(false);
+        pSelectedType->setFrameStyle(QFrame::Panel |  QFrame::Sunken);
+        pSelectedType->setLineWidth(2);   //  Add some depth to our sunken lables.
+        pSelectedType->setVisible(false);
+
 //  Create Listbox.
         pReportList         =   new QListWidget();
         pStoryList          =   new QListWidget();
+        pTypeList           =   new QListWidget();
 
+        return true;
+}
+
+bool MainWindow::HandleCharList()
+{
+        if(oCharacterFlag.Flip())
+        {
+            pTypeList->setVisible(true);
+            FillCharacterList();
+        }
+        else
+        {
+            pReportListLayout->invalidate();
+            pTypeList->setVisible(false);
+        }
+        return true;
+}
+
+bool MainWindow::HandleSceneList()
+{
+        if(oCharacterFlag.Flip())
+        {
+            pTypeList->setVisible(true);
+            FillCharacterList();
+        }
+        else
+        {
+            pReportListLayout->invalidate();
+            pTypeList->setVisible(false);
+        }
+        return true;
+}
+bool MainWindow::HandleTypeList()
+{
+        if(oCharacterFlag.Flip())
+        {
+            pTypeList->setVisible(true);
+            FillCharacterList();
+        }
+        else
+        {
+            pReportListLayout->invalidate();
+            pTypeList->setVisible(false);
+        }
         return true;
 }
 
@@ -136,6 +188,8 @@ bool MainWindow::SetLayouts()
 //  Report List Layout.
         pReportListLayout->addWidget(pStoryList);
         pReportListLayout->addWidget(pReportList,Qt::AlignTop);
+        pReportListLayout->addWidget(pTypeList);
+        pTypeList->setVisible(false);
 
 //  Report Detail Layout.
         pReportDetailLayout->addWidget(pSelectedStoryLabel);
@@ -211,6 +265,27 @@ bool MainWindow::FillReportList()
             stData.sKeyString = oVariant.toString().toStdString();
             pReportList->addItem(oVariant.toString());
             vReports.push_back(stData);              //  In the container.
+        }
+
+        return true;
+}
+
+bool MainWindow::FillCharacterList()
+{
+    QVariant    oVariant;
+    stTypeData  stData;
+
+        vReports.clear();
+        QSqlQuery oQ("SELECT char_id , used_name FROM character ORDER BY used_name");
+        while(oQ.next())
+        {
+            stData.iPosKey = 0;
+            oVariant = oQ.value(0);
+            stData.iKey = oVariant.toInt();
+            oVariant = oQ.value(1);
+            stData.sKeyString = oVariant.toString().toStdString();
+            pTypeList->addItem(oVariant.toString());
+            vCharacters.push_back(stData);              //  In the container.
         }
 
         return true;
@@ -406,40 +481,25 @@ void MainWindow::CancelButton()
 }
 
 //  Okay, let's do the report.
+//  Going to scrunch this case statement a little.
 void MainWindow::ExecuteButton()
 {
         if(iSelectedReport > 0)
         {
             switch(iSelectedReport)         //  Adding the 1 to offset listwidget index.
             {
-                case    1:
-                    FullCharacterReport();
+                case    1:  FullCharacterReport();  break;
+                case    2:  FullSceneReport();      break;
+                case    3:  FullPlaceReport();      break;
+                case    4:  FullIdeasReport();      break;
+                case    5:  FullWorldsReport();     break;
+                case    6:  FullStoriesReport();    break;
+                case    7:  FullSagasReport();      break;
+                case    8:  FullThingsReport();     break;
+                case    9:  FullDBHistoryReport();  break;
+
+                default:
                     break;
-                case    2:
-                    FullSceneReport();
-                    break;
-                case    3:
-                    FullPlaceReport();
-                    break;
-                case    4:
-                    FullIdeasReport();
-                    break;
-                case    5:
-                    FullWorldsReport();
-                    break;
-                case    6:
-                    FullStoriesReport();
-                    break;
-                case    7:
-                    FullSagasReport();
-                    break;
-                case    8:
-                    FullThingsReport();
-                case    9:
-                    FullDBHistoryReport();
-                    break;
-                    default:
-                break;
             }
         }
         return;
@@ -463,6 +523,7 @@ void MainWindow::StoryDoubleClicked(QListWidgetItem * pItem)
 
 void MainWindow::ReportDoubleClicked(QListWidgetItem * pItem)
 {
+        HandleCharList();   //  Test.
         sSelectedReport = pItem->text().toStdString();
 
         for(auto & it : vReports)
@@ -837,3 +898,28 @@ POUT(sBuild.toStdString());
         CreateReportWindow(oReport , "Wrter Application History");
         return true;
 }
+
+bool MainWindow::CharactersInSceneReport()
+{
+
+        return true;
+}
+
+bool MainWindow::CharactersInGroupReport()
+{
+
+        return true;
+}
+
+bool MainWindow::FullTypeReport()
+{
+
+        return true;
+}
+
+bool MainWindow::TypeReport()
+{
+
+        return true;
+}
+

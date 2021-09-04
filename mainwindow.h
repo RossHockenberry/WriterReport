@@ -36,11 +36,15 @@ public:
     void            UpdateStatus(const char *,ulong  iTime = 0);
     void            GetScreenData();
     bool            LoadSettings();
-    bool            FillStoryList();
+    bool            HandleCharList();
+    bool            HandleSceneList();
+    bool            HandleTypeList();
 
 //  Report Functions.
     bool            ClearReportData();
+    bool            FillStoryList();
     bool            FillReportList();
+    bool            FillCharacterList();
     bool            GetPlaceList();
     bool            GetIdeasList();
     bool            GetWorldsList();
@@ -67,6 +71,10 @@ public:
     bool            FullSagasReport();
     bool            FullThingsReport();
     bool            FullDBHistoryReport();
+    bool            CharactersInSceneReport();
+    bool            CharactersInGroupReport();
+    bool            FullTypeReport();
+    bool            TypeReport();
 
 private:
 //  Layouts.
@@ -83,10 +91,15 @@ private:
 
     QListWidget     *   pReportList;
     QListWidget     *   pStoryList;
+    QListWidget     *   pTypeList;
+
     QLabel          *   pSelectedStory;
     QLabel          *   pSelectedReport;
+    QLabel          *   pSelectedType;
+
     QLabel          *   pSelectedStoryLabel;
     QLabel          *   pSelectedReportLabel;
+    QLabel          *   pSelectedTypeLabel;
 
 //  Misc.
     QSettings       *   pSettings;
@@ -109,12 +122,25 @@ private:
     std::string                 sSelectedStory;
     int                         iSelectedStory = 0;
 
+    std::vector<stTypeData>     vCharacters;
+    std::string                 sSelectedCharacter;
+    int                         iSelectedCharacter = 0;
+
+    std::vector<stTypeData>     vTypes;
+    std::string                 sSelectedType;
+    int                         iSelectedType = 0;
+
+    std::vector<stTypeData>     vScenes;
+    std::string                 sSelectedScene;
+    int                         iSelectedScene = 0;
+
     std::vector<stTypeData>     vPlaces;
     std::vector<stTypeData>     vIdeas;
     std::vector<stTypeData>     vWorlds;
     std::vector<stTypeData>     vSagas;
     std::vector<stTypeData>     vThings;
     std::vector<stTypeData>     vDBHistory;
+
 
 //  Database stuff.
     QSqlDatabase    oDb;        //  No copy constructor problem.
@@ -133,11 +159,13 @@ private:
 //  Other Database stuff.
     MyFlag          oOpenFlag;
     MyFlag          oStoryFlag;
+    MyFlag          oTypeListFlag;              //  Used to turn Type list on and off.
     MyFlag          oCharacterFlag;
+    MyFlag          oTypeList;
     MyFlag          oSceneFlag;
-    MyFlag          oReportFlag;
+//    MyFlag          oReportFlag;
 
-    int             iNumberTables   = -1;         //  -1 means not open yet.
+    int             iNumberTables   = -1;       //  -1 means not open yet.
     int             iReturnRows     = -1;
 
 public slots:
