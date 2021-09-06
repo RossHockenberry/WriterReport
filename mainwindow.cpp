@@ -131,6 +131,24 @@ bool MainWindow::InitWidgets()
         return true;
 }
 
+bool MainWindow::TypeListHandler()
+{
+        switch(iSelectedReport)
+        {
+            case    1:
+                HandleCharList();
+                break;
+            case    2:
+                HandleSceneList();
+                break;
+
+                default:
+                    break;
+            }
+
+        return true;
+}
+
 bool MainWindow::HandleCharList()
 {
         if(oCharacterFlag.Flip())
@@ -216,6 +234,7 @@ bool MainWindow::SetSlots()
 //  List slots.
         connect(pReportList , &QListWidget::itemDoubleClicked , this , &MainWindow::ReportDoubleClicked);
         connect(pStoryList , &QListWidget::itemDoubleClicked , this , &MainWindow::StoryDoubleClicked);
+        connect(pTypeList , &QListWidget::itemDoubleClicked , this , &MainWindow::TypeDoubleClicked);
         return true;
 }
 
@@ -439,12 +458,6 @@ bool MainWindow::ClearReportData()
         return true;
 }
 
-bool MainWindow::InsertDivider()
-{
-
-        return true;
-}
-
 bool MainWindow::CreateReportWindow(QTextDocument & oTD , std::string sName)
 {
         ReportWindow  *  pRW = new ReportWindow(&oTD , sName , this);
@@ -472,8 +485,11 @@ void MainWindow::CancelButton()
 {
         pSelectedStory->clear();
         pSelectedReport->clear();
-        iSelectedStory  = 0;
-        iSelectedReport = 0;
+        pSelectedType->clear();
+        iSelectedStory      = 0;
+        iSelectedReport     = 0;
+        iSelectedScene      = 0;
+        iSelectedCharacter  = 0;
         pStoryList->setCurrentRow(0);
         pReportList->setCurrentRow(0);
 
@@ -486,17 +502,25 @@ void MainWindow::ExecuteButton()
 {
         if(iSelectedReport > 0)
         {
-            switch(iSelectedReport)         //  Adding the 1 to offset listwidget index.
+            switch(iSelectedReport)
             {
-                case    1:  FullCharacterReport();  break;
-                case    2:  FullSceneReport();      break;
-                case    3:  FullPlaceReport();      break;
-                case    4:  FullIdeasReport();      break;
-                case    5:  FullWorldsReport();     break;
-                case    6:  FullStoriesReport();    break;
-                case    7:  FullSagasReport();      break;
-                case    8:  FullThingsReport();     break;
-                case    9:  FullDBHistoryReport();  break;
+                case    1:
+                    FullCharacterReport(iSelectedStory , iSelectedCharacter);
+                    break;
+                case    2:  FullSceneReport();          break;
+                case    3:  FullPlaceReport();          break;
+                case    4:  FullIdeasReport();          break;
+                case    5:  FullWorldsReport();         break;
+                case    6:  FullStoriesReport();        break;
+                case    7:  FullSagasReport();          break;
+                case    8:  FullThingsReport();         break;
+                case    9:  FullDBHistoryReport();      break;
+                case    10: SingleCharacterReport();    break;
+                case    11: SingleSceneReport();        break;
+                case    12: SingleTypeReport();         break;
+                case    13: FullTypesReport();          break;
+                case    14: CharactersInSceneReport();  break;
+                case    15: CharactersInSceneReport();  break;
 
                 default:
                     break;
@@ -523,7 +547,6 @@ void MainWindow::StoryDoubleClicked(QListWidgetItem * pItem)
 
 void MainWindow::ReportDoubleClicked(QListWidgetItem * pItem)
 {
-        HandleCharList();   //  Test.
         sSelectedReport = pItem->text().toStdString();
 
         for(auto & it : vReports)
@@ -531,19 +554,37 @@ void MainWindow::ReportDoubleClicked(QListWidgetItem * pItem)
                 iSelectedReport = it.iKey;
 
         pSelectedReport->setText(sSelectedReport.c_str());
+
+        TypeListHandler();
+        return;
+}
+
+void MainWindow::TypeDoubleClicked(QListWidgetItem * pItem)
+{
+        sSelectedType = pItem->text().toStdString();
+
+        for(auto & it : vReports)
+            if(it.sKeyString == sSelectedType)
+            {
+                if(oCharacterFlag.Is())
+                    iSelectedCharacter = it.iKey;
+                if(oSceneFlag.Is())
+                    iSelectedScene = it.iKey;
+            }
+        pSelectedType->setText(sSelectedType.c_str());
         return;
 }
 
 //------------------------------------------------------------------------
 //  Actual Reports
 //------------------------------------------------------------------------
-bool MainWindow::FullCharacterReport()
+bool MainWindow::FullCharacterReport(int iStory , int iChar)
 {
     QString sBuild;
     QTextDocument   oReport;
     QTextCursor oCursor(&oReport);
 
-        QString sS(QString("SELECT DISTINCT  c.used_name ,"
+        QString oS(QString("SELECT DISTINCT  c.used_name ,"
                                 " c.first_name ,"
                                 " c.middle_name ,"
                                 " c.last_name , "
@@ -565,10 +606,16 @@ bool MainWindow::FullCharacterReport()
                                 " INNER JOIN character AS c ON c.char_id = scl.char_id"
                                 " INNER JOIN scene as sc ON sc.scene_id = scl.scene_id"
                                 " INNER JOIN sex ON sex.id = c.sex"
-                                " INNER JOIN sex_pref ON sex_pref.id = c.sex_pref"
-                                " WHERE sc.story_id = %1").arg(iSelectedStory));
-POUT(sS.toStdString());
-        QSqlQuery oQ(sS);
+                                " INNER JOIN sex_pref ON sex_pref.id = c.sex_pref"));
+        if(iStory > 0)
+        {
+            oS += QString(" WHERE sc.story_id = %1").arg(iStory);
+            if(iChar > 0)
+                oS += QString(" AND c.char_id = %1").arg(iChar);
+        }
+
+POUT(oS.toStdString());
+        QSqlQuery oQ(oS);
         sBuild.clear();
 
         while(oQ.next()) // && iC < 2)
@@ -598,7 +645,7 @@ POUT(sS.toStdString());
         return true;            //  Report finished.
 }
 
-bool MainWindow::FullSceneReport()
+bool MainWindow::FullSceneReport(int iStory)
 {
     QString sBuild;
     QTextDocument   oReport;
@@ -911,15 +958,31 @@ bool MainWindow::CharactersInGroupReport()
         return true;
 }
 
-bool MainWindow::FullTypeReport()
+bool MainWindow::SingleTypeReport()
 {
 
         return true;
 }
 
-bool MainWindow::TypeReport()
+bool MainWindow::FullTypesReport()
 {
 
         return true;
 }
+
+bool MainWindow::SingleCharacterReport()
+{
+
+        return true;
+}
+
+bool MainWindow::SingleSceneReport()
+{
+
+        return true;
+}
+
+
+
+
 

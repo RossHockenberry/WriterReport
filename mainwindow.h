@@ -36,6 +36,7 @@ public:
     void            UpdateStatus(const char *,ulong  iTime = 0);
     void            GetScreenData();
     bool            LoadSettings();
+    bool            TypeListHandler();
     bool            HandleCharList();
     bool            HandleSceneList();
     bool            HandleTypeList();
@@ -49,7 +50,6 @@ public:
     bool            GetIdeasList();
     bool            GetWorldsList();
     bool            GetSagasList();
-    bool            InsertDivider();        //  Could be a frame, blank line, etc.
     bool            CreateReportWindow(QTextDocument & , std::string);
     std::string     ReturnTypeName(int , std::vector<stTypeData> &);//  Some public data.
 
@@ -62,8 +62,8 @@ public:
     std::string     ReturnDatabaseError();
 
 //  Actual Reports.
-    bool            FullCharacterReport();
-    bool            FullSceneReport();
+    bool            FullCharacterReport(int iStory = 0 , int iChar = 0 );
+    bool            FullSceneReport(int iStory = 0);
     bool            FullPlaceReport();
     bool            FullIdeasReport();
     bool            FullWorldsReport();
@@ -71,10 +71,12 @@ public:
     bool            FullSagasReport();
     bool            FullThingsReport();
     bool            FullDBHistoryReport();
+    bool            SingleCharacterReport();
+    bool            SingleSceneReport();
     bool            CharactersInSceneReport();
     bool            CharactersInGroupReport();
-    bool            FullTypeReport();
-    bool            TypeReport();
+    bool            FullTypesReport();
+    bool            SingleTypeReport();
 
 private:
 //  Layouts.
@@ -159,7 +161,7 @@ private:
 //  Other Database stuff.
     MyFlag          oOpenFlag;
     MyFlag          oStoryFlag;
-    MyFlag          oTypeListFlag;              //  Used to turn Type list on and off.
+    MyFlag          oTypeWidgetFlag;              //  Used to turn Type list on and off.
     MyFlag          oCharacterFlag;
     MyFlag          oTypeList;
     MyFlag          oSceneFlag;
@@ -174,5 +176,6 @@ public slots:
     void            ExecuteButton();
     void            StoryDoubleClicked(QListWidgetItem *);
     void            ReportDoubleClicked(QListWidgetItem *);
+    void            TypeDoubleClicked(QListWidgetItem *);
 };
 #endif // MAINWINDOW_H
