@@ -43,6 +43,7 @@ public:
 
 //  Report Functions.
     bool            ClearReportData();
+    void            FillTypesList();                //  Just a list of type names.
     bool            FillStoryList();
     bool            FillReportList();
     bool            FillCharacterList();
@@ -50,6 +51,7 @@ public:
     bool            GetIdeasList();
     bool            GetWorldsList();
     bool            GetSagasList();
+    bool            GetTypeData(std::string &);     //  Get the data for a single type.
     bool            CreateReportWindow(QTextDocument & , std::string);
     std::string     ReturnTypeName(int , std::vector<stTypeData> &);//  Some public data.
 
@@ -143,7 +145,8 @@ private:
     std::vector<stTypeData>     vSagas;
     std::vector<stTypeData>     vThings;
     std::vector<stTypeData>     vDBHistory;
-
+    std::vector<stTypeData>     vTypeData;  //  This hold the data for a single type.
+    std::vector<std::string>    vTypes;     //  Just a list of the types.
 
 //  Database stuff.
     QSqlDatabase    oDb;        //  No copy constructor problem.

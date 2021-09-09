@@ -33,7 +33,7 @@ bool ReportWindow::OnCreate()
 bool ReportWindow::InitObject()
 {
         pMainView               =   new QTextEdit();
-        pMainView->setAcceptRichText(false);
+        pMainView->setAcceptRichText(true);
 
         pReport                 =   new QTextDocument();
 
@@ -55,8 +55,10 @@ bool ReportWindow::InitObject()
         connect(pPrintButton , &QPushButton::clicked , this , &ReportWindow::PrintReport);
 
 //  Add the text to the window.
+//  There is a problem here that I don't understand yet.
+//  QTextEdit does not handle HTML correctly in all cases.
         pMainView->setHtml(pReport->toMarkdown());
-//        pMainView->setMarkdown(pReport->toPlainText());
+
         return true;
 }
 

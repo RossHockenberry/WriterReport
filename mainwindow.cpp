@@ -247,6 +247,12 @@ void MainWindow::UpdateStatus(const char * pString , ulong iTime)
         return;
 }
 
+void MainWindow::FillTypesList()
+{
+
+        return;
+}
+
 bool MainWindow::FillStoryList()
 {
     QVariant    oVariant;
@@ -804,7 +810,7 @@ POUT(sBuild.toStdString());
 //  Build the report string.
         while(oQ.next())
         {
-            sBuild +=   "<b> " + oQ.value("name").toString() + " </b>  ";
+            sBuild +=   "<b>" + oQ.value("name").toString();
             sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
             sBuild +=   "Special Things = " + oQ.value("special_things").toString() + "<br>";
             sBuild +=   "Origin Date = ";
@@ -875,15 +881,14 @@ bool MainWindow::FullSagasReport()
                     " FROM saga as s "
                     " ORDER BY s.saga_id";
 
-POUT(sBuild.toStdString());
         QSqlQuery oQ(sBuild);
         sBuild.clear();
 
 //  Build the report string.
         while(oQ.next())
         {
-            sBuild +=   "<b> " + oQ.value("name").toString() + " </b>  ";
-            sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
+            sBuild +=   "<b> " + oQ.value("name").toString() + " </b> <br> ";
+            sBuild +=   "Description = " + oQ.value("description").toString() + " <br>";
             sBuild +=   "History = " + oQ.value("history").toString() + "<br>";
             QDateTime   oD = oQ.value("origin_date").toDateTime();
             sBuild +=   "Origin Date = " + oD.toString() + "<br>";
@@ -917,9 +922,9 @@ POUT(sBuild.toStdString());
 //  Build the report string.
         while(oQ.next())
         {
-            sBuild +=   "<b> " + oQ.value("name").toString() + " </b>  <br>";
+            sBuild +=   "<b>" + oQ.value("name").toString() + " </b>  <br>";
             sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
-            sBuild +=   "Purpose = " + oQ.value("history").toString() + "<br>";
+            sBuild +=   "Purpose = " + oQ.value("purpose").toString() + "<br>";
             QDateTime   oD = oQ.value("origin_date").toDateTime();
             sBuild +=   "Origin Date = " + oD.toString() + "<br>";
             sBuild +=   "<br>" + oSeperator + "<br>";
