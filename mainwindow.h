@@ -67,7 +67,7 @@ public:
     bool            FullPlaceReport();
     bool            FullIdeasReport();
     bool            FullWorldsReport();
-    bool            FullStoriesReport();
+    bool            FullStoriesReport(int iStory = 0);
     bool            FullSagasReport();
     bool            FullThingsReport();
     bool            FullDBHistoryReport();
@@ -77,6 +77,7 @@ public:
     bool            CharactersInGroupReport();
     bool            FullTypesReport();
     bool            SingleTypeReport();
+    bool            SingleStoryReport();
 
 private:
 //  Layouts.

@@ -294,7 +294,7 @@ bool MainWindow::FillCharacterList()
     QVariant    oVariant;
     stTypeData  stData;
 
-        vReports.clear();
+        vCharacters.clear();
         QSqlQuery oQ("SELECT char_id , used_name FROM character ORDER BY used_name");
         while(oQ.next())
         {
@@ -460,7 +460,7 @@ bool MainWindow::ClearReportData()
 
 bool MainWindow::CreateReportWindow(QTextDocument & oTD , std::string sName)
 {
-        ReportWindow  *  pRW = new ReportWindow(&oTD , sName , this);
+        ReportWindow  *  pRW = new ReportWindow(sName , &oTD , this);
         pRW->OnCreate();
         pRW->showMaximized();
 
@@ -507,7 +507,9 @@ void MainWindow::ExecuteButton()
                 case    1:
                     FullCharacterReport(iSelectedStory , iSelectedCharacter);
                     break;
-                case    2:  FullSceneReport();          break;
+                case    2:
+                    FullSceneReport(iSelectedStory);
+                    break;
                 case    3:  FullPlaceReport();          break;
                 case    4:  FullIdeasReport();          break;
                 case    5:  FullWorldsReport();         break;
@@ -521,6 +523,7 @@ void MainWindow::ExecuteButton()
                 case    13: FullTypesReport();          break;
                 case    14: CharactersInSceneReport();  break;
                 case    15: CharactersInSceneReport();  break;
+                case    16: SingleStoryReport();        break;
 
                 default:
                     break;
@@ -547,12 +550,16 @@ void MainWindow::StoryDoubleClicked(QListWidgetItem * pItem)
 
 void MainWindow::ReportDoubleClicked(QListWidgetItem * pItem)
 {
+    std::string st;
+
         sSelectedReport = pItem->text().toStdString();
 
-        for(auto & it : vReports)
+        for(auto & it: vReports)
             if(it.sKeyString == sSelectedReport)
+            {
                 iSelectedReport = it.iKey;
-
+                st = sSelectedReport;
+            }
         pSelectedReport->setText(sSelectedReport.c_str());
 
         TypeListHandler();
@@ -654,13 +661,18 @@ bool MainWindow::FullSceneReport(int iStory)
         sBuild = QString("SELECT s.name , "
                                 " p.name , "
                                 " s.description ,"
+                                " conditions ,"
                                 " s.purpose ,"
                                 " s.origin_date "
                                 " FROM scene as s "
-                                " INNER JOIN place as p ON p.place_id = s.place_id "
-                                " WHERE s.story_id = %1"
-                                " ORDER BY s.sequence ")
-                                .arg(std::to_string(iSelectedStory).c_str());
+                                " INNER JOIN place as p ON p.place_id = s.place_id ");
+
+        if(iStory > 0)
+            sBuild +=   QString(" WHERE s.story_id = %1 ")
+                                .arg(std::to_string(iStory).c_str());
+
+        sBuild += "ORDER BY s.sequence ";
+
 
 POUT(sBuild.toStdString());
         QSqlQuery oQ(sBuild);
@@ -680,7 +692,11 @@ POUT(sBuild.toStdString());
             sBuild.clear();
         }
 
-        CreateReportWindow(oReport , "Scenes");
+        sBuild.clear();
+        sBuild = "Scenes";
+        if(iStory)
+            sBuild += QString(" for Story %1").arg(sSelectedStory.c_str());
+        CreateReportWindow(oReport , sBuild.toStdString());
         return true;
 }
 
@@ -804,7 +820,7 @@ POUT(sBuild.toStdString());
         return true;
 }
 
-bool MainWindow::FullStoriesReport()
+bool MainWindow::FullStoriesReport(int iStory)
 {
     QString sBuild;
     QTextDocument   oReport;
@@ -818,6 +834,9 @@ bool MainWindow::FullStoriesReport()
                     " s.word_count "
                     " FROM story as s "
                     " ORDER BY s.story_id";
+
+        if(iStory > 0)
+            sBuild += QString(" WHERE sc.story_id = %1").arg(iStory);
 
 POUT(sBuild.toStdString());
         QSqlQuery oQ(sBuild);
@@ -982,6 +1001,11 @@ bool MainWindow::SingleSceneReport()
         return true;
 }
 
+bool MainWindow::SingleStoryReport()
+{
+
+        return true;
+}
 
 
 

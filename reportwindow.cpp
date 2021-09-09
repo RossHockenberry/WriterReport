@@ -9,10 +9,11 @@
 #include "myinclude.h"
 #include "mlocal.h"
 
-ReportWindow::ReportWindow(QTextDocument * pDocument , std::string sName, QWidget *parent)
-            : QWidget(parent , Qt::Window) , pParentDoc(pDocument) ,
-              pParent(dynamic_cast<MainWindow *>(parent))
+ReportWindow::ReportWindow( std::string sName , QTextDocument * pDocument , QWidget *parent)
+            : QWidget(parent , Qt::Window)
 {
+        pParentDoc = pDocument;
+        pParent = dynamic_cast<MainWindow *>(parent);
         setWindowTitle(sName.c_str());
         resize(1000 , 1000);    //  Just a starting size.
         return;
@@ -31,16 +32,19 @@ bool ReportWindow::OnCreate()
 
 bool ReportWindow::InitObject()
 {
-        pMainView       =   new QTextEdit();
+        pMainView               =   new QTextEdit();
         pMainView->setAcceptRichText(false);
 
-        pReport         =   new QTextDocument();
-        pCloseButton    =   new QPushButton("Close");
-        pPrintButton    =   new QPushButton("Print");
-        pLayout         =   new QVBoxLayout(this);
-        pButtonLayout   =   new QHBoxLayout();
+        pReport                 =   new QTextDocument();
+
+        pCloseButton            =   new QPushButton("Close");
+        pPrintButton            =   new QPushButton("Print");
+
+        pLayout                 =   new QVBoxLayout(this);
+        pButtonLayout           =   new QHBoxLayout();
 
         pLayout->addWidget(pMainView);
+
         pButtonLayout->addWidget(pPrintButton);
         pButtonLayout->addWidget(pCloseButton);
 
@@ -49,6 +53,8 @@ bool ReportWindow::InitObject()
 
         connect(pCloseButton , &QPushButton::clicked , this , &ReportWindow::close);
         connect(pPrintButton , &QPushButton::clicked , this , &ReportWindow::PrintReport);
+
+//  Add the text to the window.
         pMainView->setHtml(pReport->toMarkdown());
 //        pMainView->setMarkdown(pReport->toPlainText());
         return true;
@@ -56,16 +62,16 @@ bool ReportWindow::InitObject()
 
 bool ReportWindow::PrintReport()
 {
-//    QString         sBuild = pMainView->toPlainText();
     QString         sBuild = pMainView->toHtml();
-    QTextDocument   oText; //(sBuild);
+    QTextDocument   oText;
+    QPrinter        oPrinter;
 
-        QPrinter oPrinter(QPrinter::PrinterResolution);
-        oPrinter.setOutputFormat(QPrinter::NativeFormat);
+//  Open the Printer Dialog.
         QPrintDialog oPrintDialog(&oPrinter,this);
         oPrintDialog.exec();
-        oPrinter.setPageOrientation(QPageLayout::Landscape);
-        oPrinter.setDuplex(QPrinter::DuplexLongSide);
+//        pPrinter->setResolution(QPrinter::PrinterResolution);
+//        pPrinter->setOutputFormat(QPrinter::NativeFormat);
+
         oText.setHtml(sBuild);
         oText.print(&oPrinter);
         return true;

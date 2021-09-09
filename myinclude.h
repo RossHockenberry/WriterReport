@@ -22,6 +22,7 @@
 #include <QDropEvent>
 
 #include <QFormLayout>
+#include <QFrame>
 #include <QFileDialog>
 #include <QFontDialog>
 #include <QFont>
@@ -31,6 +32,8 @@
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QInputDialog>
+
+#include <QLabel>
 #include <QLayout>
 #include <QLineEdit>
 #include <QList>
@@ -46,7 +49,6 @@
 #include <QPrintDialog>
 #include <QPrinter>
 #include <QPrinterInfo>
-
 #include <QPixmap>
 #include <QProcess>
 
@@ -78,14 +80,14 @@
 #include <QSqlRecord>
 #include <QSqlQuery>
 #include <QSqlResult>
-
 #include <QStyleFactory>
 #include <QStringList>
 #include <QStatusBar>
+
 #include <QWidget>
 
-#include <QFrame>
-#include <QLabel>
+
+
 #include <QToolBar>
 #include <QGroupBox>
 #include <QPushButton>
