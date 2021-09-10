@@ -47,6 +47,7 @@ public:
     bool            FillStoryList();
     bool            FillReportList();
     bool            FillCharacterList();
+    bool            FillSceneList();
     bool            GetPlaceList();
     bool            GetIdeasList();
     bool            GetWorldsList();
@@ -65,7 +66,7 @@ public:
 
 //  Actual Reports.
     bool            FullCharacterReport(int iStory = 0 , int iChar = 0 );
-    bool            FullSceneReport(int iStory = 0);
+    bool            FullSceneReport(int iStory = 0 , int iScene = 0);
     bool            FullPlaceReport();
     bool            FullIdeasReport();
     bool            FullWorldsReport();
@@ -127,7 +128,7 @@ private:
     std::string                 sSelectedStory;
     int                         iSelectedStory = 0;
 
-    std::vector<stTypeData>     vCharacters;
+//    std::vector<stTypeData>     vCharacters;
     std::string                 sSelectedCharacter;
     int                         iSelectedCharacter = 0;
 
@@ -145,8 +146,7 @@ private:
     std::vector<stTypeData>     vSagas;
     std::vector<stTypeData>     vThings;
     std::vector<stTypeData>     vDBHistory;
-    std::vector<stTypeData>     vTypeData;  //  This hold the data for a single type.
-    std::vector<std::string>    vTypes;     //  Just a list of the types.
+    std::vector<std::string>    vTypesData;  //  This hold the data for a single type.
 
 //  Database stuff.
     QSqlDatabase    oDb;        //  No copy constructor problem.

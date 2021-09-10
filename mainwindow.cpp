@@ -117,6 +117,8 @@ bool MainWindow::InitWidgets()
         pSelectedReport->setLineWidth(2);   //  Add some depth to our sunken lables.
 
         pSelectedTypeLabel    =   new QLabel("Selected Item");
+        pSelectedTypeLabel->setVisible(false);
+
         pSelectedType         =   new QLabel(" ");
         pSelectedType->setVisible(false);
         pSelectedType->setFrameStyle(QFrame::Panel |  QFrame::Sunken);
@@ -131,6 +133,9 @@ bool MainWindow::InitWidgets()
         return true;
 }
 
+//  At some point I've got to couple these to the db table.
+//  Or find a way to define the report in the database.
+//  Perhaps as a query string or something.??
 bool MainWindow::TypeListHandler()
 {
         switch(iSelectedReport)
@@ -151,33 +156,44 @@ bool MainWindow::TypeListHandler()
 
 bool MainWindow::HandleCharList()
 {
+        pSelectedTypeLabel->setText("Character");
         if(oCharacterFlag.Flip())
         {
             pTypeList->setVisible(true);
+            pSelectedTypeLabel->setVisible(true);
+            pSelectedType->setVisible(true);
             FillCharacterList();
         }
         else
         {
             pReportListLayout->invalidate();
             pTypeList->setVisible(false);
+            pSelectedTypeLabel->setVisible(false);
+            pSelectedType->setVisible(false);
         }
         return true;
 }
 
 bool MainWindow::HandleSceneList()
 {
-        if(oCharacterFlag.Flip())
+        pSelectedTypeLabel->setText("Scene");
+        if(oSceneFlag.Flip())
         {
             pTypeList->setVisible(true);
-            FillCharacterList();
+            pSelectedTypeLabel->setVisible(true);
+            pSelectedType->setVisible(true);
+            FillSceneList();
         }
         else
         {
             pReportListLayout->invalidate();
             pTypeList->setVisible(false);
+            pSelectedTypeLabel->setVisible(false);
+            pSelectedType->setVisible(false);
         }
         return true;
 }
+
 bool MainWindow::HandleTypeList()
 {
         if(oCharacterFlag.Flip())
@@ -214,6 +230,8 @@ bool MainWindow::SetLayouts()
         pReportDetailLayout->addWidget(pSelectedStory);
         pReportDetailLayout->addWidget(pSelectedReportLabel);
         pReportDetailLayout->addWidget(pSelectedReport);
+        pReportDetailLayout->addWidget(pSelectedTypeLabel);
+        pReportDetailLayout->addWidget(pSelectedType);
 
 //  Button Layout
         pButtonLayout->addWidget(pExecuteButton);
@@ -300,7 +318,7 @@ bool MainWindow::FillCharacterList()
     QVariant    oVariant;
     stTypeData  stData;
 
-        vCharacters.clear();
+        vTypes.clear();
         QSqlQuery oQ("SELECT char_id , used_name FROM character ORDER BY used_name");
         while(oQ.next())
         {
@@ -310,7 +328,36 @@ bool MainWindow::FillCharacterList()
             oVariant = oQ.value(1);
             stData.sKeyString = oVariant.toString().toStdString();
             pTypeList->addItem(oVariant.toString());
-            vCharacters.push_back(stData);              //  In the container.
+            vTypes.push_back(stData);              //  In the container.
+        }
+
+        return true;
+}
+
+bool MainWindow::FillSceneList()
+{
+    QString     sBuild;
+    QVariant    oVariant;
+    stTypeData  stData;
+
+        vTypes.clear();
+        if(iSelectedStory)
+            sBuild = QString("SELECT scene_id , name FROM scene WHERE story_id = %1 ORDER BY sequence")
+                            .arg(iSelectedStory);
+        else
+            sBuild = QString("SELECT scene_id , name FROM scene ORDER BY sequence");
+
+
+        QSqlQuery oQ(sBuild);
+        while(oQ.next())
+        {
+            stData.iPosKey = 0;
+            oVariant = oQ.value(0);
+            stData.iKey = oVariant.toInt();
+            oVariant = oQ.value(1);
+            stData.sKeyString = oVariant.toString().toStdString();
+            pTypeList->addItem(oVariant.toString());
+            vTypes.push_back(stData);              //  In the container.
         }
 
         return true;
@@ -460,6 +507,18 @@ std::string MainWindow::ReturnDatabaseError()
 //-----------------------------------------------------------------------
 bool MainWindow::ClearReportData()
 {
+        pSelectedStory->clear();
+        pSelectedReport->clear();
+        pSelectedType->clear();
+        iSelectedStory      = 0;
+        iSelectedReport     = 0;
+        iSelectedScene      = 0;
+        iSelectedCharacter  = 0;
+        pStoryList->setCurrentRow(0);
+        pReportList->setCurrentRow(0);
+        pTypeList->setVisible(false);
+        pSelectedTypeLabel->setVisible(false);
+        pSelectedType->setVisible(false);
 
         return true;
 }
@@ -489,16 +548,7 @@ void MainWindow::CloseButton()
 //  Okay, let's cancel and clear everything.
 void MainWindow::CancelButton()
 {
-        pSelectedStory->clear();
-        pSelectedReport->clear();
-        pSelectedType->clear();
-        iSelectedStory      = 0;
-        iSelectedReport     = 0;
-        iSelectedScene      = 0;
-        iSelectedCharacter  = 0;
-        pStoryList->setCurrentRow(0);
-        pReportList->setCurrentRow(0);
-
+        ClearReportData();
         return;;
 }
 
@@ -514,7 +564,7 @@ void MainWindow::ExecuteButton()
                     FullCharacterReport(iSelectedStory , iSelectedCharacter);
                     break;
                 case    2:
-                    FullSceneReport(iSelectedStory);
+                    FullSceneReport(iSelectedStory , iSelectedScene);
                     break;
                 case    3:  FullPlaceReport();          break;
                 case    4:  FullIdeasReport();          break;
@@ -523,13 +573,11 @@ void MainWindow::ExecuteButton()
                 case    7:  FullSagasReport();          break;
                 case    8:  FullThingsReport();         break;
                 case    9:  FullDBHistoryReport();      break;
-                case    10: SingleCharacterReport();    break;
-                case    11: SingleSceneReport();        break;
-                case    12: SingleTypeReport();         break;
-                case    13: FullTypesReport();          break;
-                case    14: CharactersInSceneReport();  break;
-                case    15: CharactersInSceneReport();  break;
-                case    16: SingleStoryReport();        break;
+                case    10: SingleTypeReport();         break;
+                case    11: FullTypesReport();          break;
+                case    12: CharactersInSceneReport();  break;
+                case    13: CharactersInSceneReport();  break;
+                case    14: SingleStoryReport();        break;
 
                 default:
                     break;
@@ -576,7 +624,7 @@ void MainWindow::TypeDoubleClicked(QListWidgetItem * pItem)
 {
         sSelectedType = pItem->text().toStdString();
 
-        for(auto & it : vReports)
+        for(auto & it : vTypes)
             if(it.sKeyString == sSelectedType)
             {
                 if(oCharacterFlag.Is())
@@ -597,7 +645,7 @@ bool MainWindow::FullCharacterReport(int iStory , int iChar)
     QTextDocument   oReport;
     QTextCursor oCursor(&oReport);
 
-        QString oS(QString("SELECT DISTINCT  c.used_name ,"
+        sBuild = (QString("SELECT DISTINCT  c.used_name ,"
                                 " c.first_name ,"
                                 " c.middle_name ,"
                                 " c.last_name , "
@@ -622,16 +670,16 @@ bool MainWindow::FullCharacterReport(int iStory , int iChar)
                                 " INNER JOIN sex_pref ON sex_pref.id = c.sex_pref"));
         if(iStory > 0)
         {
-            oS += QString(" WHERE sc.story_id = %1").arg(iStory);
+            sBuild += QString(" WHERE sc.story_id = %1").arg(iStory);
             if(iChar > 0)
-                oS += QString(" AND c.char_id = %1").arg(iChar);
+                sBuild += QString(" AND c.char_id = %1").arg(iChar);
         }
 
-POUT(oS.toStdString());
-        QSqlQuery oQ(oS);
+POUT(sBuild.toStdString());
+        QSqlQuery oQ(sBuild);
         sBuild.clear();
 
-        while(oQ.next()) // && iC < 2)
+        while(oQ.next())
         {
 
             sBuild +=   QString("<b> " + oQ.value("used_name").toString() + " </b>    Age = ");
@@ -658,7 +706,7 @@ POUT(oS.toStdString());
         return true;            //  Report finished.
 }
 
-bool MainWindow::FullSceneReport(int iStory)
+bool MainWindow::FullSceneReport(int iStory , int iScene)
 {
     QString sBuild;
     QTextDocument   oReport;
@@ -674,8 +722,11 @@ bool MainWindow::FullSceneReport(int iStory)
                                 " INNER JOIN place as p ON p.place_id = s.place_id ");
 
         if(iStory > 0)
-            sBuild +=   QString(" WHERE s.story_id = %1 ")
-                                .arg(std::to_string(iStory).c_str());
+        {
+            sBuild += QString(" WHERE s.story_id = %1 ").arg(iStory);
+            if(iScene > 0)
+                sBuild += QString(" AND s.scene_id = %1 ").arg(iScene);
+        }
 
         sBuild += "ORDER BY s.sequence ";
 
@@ -701,7 +752,7 @@ POUT(sBuild.toStdString());
         sBuild.clear();
         sBuild = "Scenes";
         if(iStory)
-            sBuild += QString(" for Story %1").arg(sSelectedStory.c_str());
+            sBuild += QString(" for Story %1 ").arg(sSelectedStory.c_str());
         CreateReportWindow(oReport , sBuild.toStdString());
         return true;
 }
