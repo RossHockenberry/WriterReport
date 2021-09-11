@@ -13,8 +13,7 @@ public:
     bool        SetTrue() { bStateFlag = true; return true; }
     bool        SetFalse() { bStateFlag = false; return false; }
     bool        Set(bool bFlag) { bStateFlag = bFlag; return bFlag; }
-    bool        Flip() { return (Set( Is() ? false : true )); }      //  Returns previous condition. Maybe??
-
+    bool        Flip() { return (Set( Is() ? false : true )); }      //  Returns previous condition.
 private:
     bool        bStateFlag = false;
 

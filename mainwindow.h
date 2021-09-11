@@ -43,7 +43,7 @@ public:
 
 //  Report Functions.
     bool            ClearReportData();
-    void            FillTypesList();                //  Just a list of type names.
+    void            FillTypeList();                 //  Just a list of type names.
     bool            FillStoryList();
     bool            FillReportList();
     bool            FillCharacterList();
@@ -52,7 +52,7 @@ public:
     bool            GetIdeasList();
     bool            GetWorldsList();
     bool            GetSagasList();
-    bool            GetTypeData(std::string &);     //  Get the data for a single type.
+    bool            GetTypeData(std::string);       //  Get the data for a single type.
     bool            CreateReportWindow(QTextDocument & , std::string);
     std::string     ReturnTypeName(int , std::vector<stTypeData> &);//  Some public data.
 
@@ -79,7 +79,7 @@ public:
     bool            CharactersInSceneReport();
     bool            CharactersInGroupReport();
     bool            FullTypesReport();
-    bool            SingleTypeReport();
+    bool            SingleTypeReport(std::string);
     bool            SingleStoryReport();
 
 private:
@@ -167,7 +167,7 @@ private:
     MyFlag          oStoryFlag;
     MyFlag          oTypeWidgetFlag;              //  Used to turn Type list on and off.
     MyFlag          oCharacterFlag;
-    MyFlag          oTypeList;
+    MyFlag          oTypeFlag;
     MyFlag          oSceneFlag;
 //    MyFlag          oReportFlag;
 

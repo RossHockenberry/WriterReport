@@ -86,6 +86,7 @@ bool MainWindow::InitObject()
 //  Now let's put in some data.
         FillStoryList();
         FillReportList();
+        FillTypeList();
         return true;
 }
 
@@ -146,7 +147,9 @@ bool MainWindow::TypeListHandler()
             case    2:
                 HandleSceneList();
                 break;
-
+            case    12:
+                HandleTypeList();
+                break;
                 default:
                     break;
             }
@@ -196,15 +199,20 @@ bool MainWindow::HandleSceneList()
 
 bool MainWindow::HandleTypeList()
 {
-        if(oCharacterFlag.Flip())
+        pSelectedTypeLabel->setText("Type");
+        if(oTypeFlag.Flip())
         {
             pTypeList->setVisible(true);
-            FillCharacterList();
+            pSelectedTypeLabel->setVisible(true);
+            pSelectedType->setVisible(true);
+            FillTypeList();
         }
         else
         {
             pReportListLayout->invalidate();
             pTypeList->setVisible(false);
+            pSelectedTypeLabel->setVisible(false);
+            pSelectedType->setVisible(false);
         }
         return true;
 }
@@ -262,12 +270,6 @@ void MainWindow::UpdateStatus(const char * pString , ulong iTime)
             iTime = 5;      //  No long waits.
         QObject().thread()->sleep(iTime);
         pStatusBar->showMessage(pString);
-        return;
-}
-
-void MainWindow::FillTypesList()
-{
-
         return;
 }
 
@@ -412,6 +414,47 @@ bool MainWindow::GetSagasList()
 
         vPlaces.clear();        //  In case we have to recall???
         QSqlQuery oQ("SELECT saga_id , name FROM saga ORDER BY saga_id");
+        while(oQ.next())
+        {
+            stData.iPosKey = 0;
+            oVariant = oQ.value(0);
+            stData.iKey = oVariant.toInt();
+            oVariant = oQ.value(1);
+            stData.sKeyString = oVariant.toString().toStdString();
+            pReportList->addItem(oVariant.toString());
+            vSagas.push_back(stData);              //  In the container.
+        }
+
+        return true;
+}
+
+void MainWindow::FillTypeList()
+{
+        vTypesData.clear();         //  Fast enough to just refill everytime.
+        pTypeList->clear();
+//  First let's fill the  type list.  For now we'll just use the table names
+        vTypesData.push_back("char_type");
+        vTypesData.push_back("sex");
+        vTypesData.push_back("sex_pref");
+        vTypesData.push_back("place_types");
+        vTypesData.push_back("state");
+        vTypesData.push_back("reports");
+
+        for(auto & it : vTypesData)
+            pTypeList->addItem(it.c_str());
+
+        return;
+}
+
+bool MainWindow::GetTypeData(std::string sType)
+{
+    QString     sBuild;
+    QVariant    oVariant;
+    stTypeData  stData;
+
+        vTypes.clear();        //  In case we have to recall???
+        sBuild = QString("SELECT saga_id , name FROM %1 ORDER BY saga_id").arg(sType.c_str());
+        QSqlQuery oQ(sBuild);
         while(oQ.next())
         {
             stData.iPosKey = 0;
@@ -573,11 +616,13 @@ void MainWindow::ExecuteButton()
                 case    7:  FullSagasReport();          break;
                 case    8:  FullThingsReport();         break;
                 case    9:  FullDBHistoryReport();      break;
-                case    10: SingleTypeReport();         break;
-                case    11: FullTypesReport();          break;
-                case    12: CharactersInSceneReport();  break;
-                case    13: CharactersInSceneReport();  break;
-                case    14: SingleStoryReport();        break;
+                case    12:
+                    SingleTypeReport(sSelectedType);
+                    break;
+                case    13: FullTypesReport();          break;
+                case    14: CharactersInSceneReport();  break;
+                case    15: CharactersInSceneReport();  break;
+                case    16: SingleStoryReport();        break;
 
                 default:
                     break;
@@ -632,6 +677,7 @@ void MainWindow::TypeDoubleClicked(QListWidgetItem * pItem)
                 if(oSceneFlag.Is())
                     iSelectedScene = it.iKey;
             }
+
         pSelectedType->setText(sSelectedType.c_str());
         return;
 }
@@ -928,6 +974,7 @@ bool MainWindow::FullSagasReport()
         sBuild = "SELECT  s.name , "
                     " s.description , "
                     " s.origin_date , "
+                    " s.world_id ,"
                     " s.history  "
                     " FROM saga as s "
                     " ORDER BY s.saga_id";
@@ -940,6 +987,10 @@ bool MainWindow::FullSagasReport()
         {
             sBuild +=   "<b> " + oQ.value("name").toString() + " </b> <br> ";
             sBuild +=   "Description = " + oQ.value("description").toString() + " <br>";
+
+            QString oT = ReturnTypeName(oQ.value("world_id").toInt() , vStorys).c_str();
+            sBuild +=   "Parent Universe = " + oT + "<br>";
+
             sBuild +=   "History = " + oQ.value("history").toString() + "<br>";
             QDateTime   oD = oQ.value("origin_date").toDateTime();
             sBuild +=   "Origin Date = " + oD.toString() + "<br>";
@@ -1033,14 +1084,70 @@ bool MainWindow::CharactersInGroupReport()
         return true;
 }
 
-bool MainWindow::SingleTypeReport()
+bool MainWindow::SingleTypeReport(std::string sTypeName)
 {
+    QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
+
+        sBuild = QString("SELECT id , name FROM %1 ORDER BY id")
+                    .arg(sTypeName.c_str());
+
+        QSqlQuery oQ(sBuild);
+        sBuild.clear();
+
+//  Build the Report String.
+        while(oQ.next())
+        {
+            sBuild +=   "<b>" + oQ.value("id").toString() + "</b>  ";
+            sBuild +=   "Name = " + oQ.value("name").toString() + "<br>";
+            sBuild +=   "<br>" + oSeperator + "<br>";
+
+            oCursor.insertText(sBuild);
+            sBuild.clear();
+        }
+
+        sBuild = "Type ";
+        sBuild += sTypeName.c_str();
+        CreateReportWindow(oReport , sBuild.toStdString());
 
         return true;
 }
 
 bool MainWindow::FullTypesReport()
 {
+    QString sBuild;
+    QString sTemp;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
+
+        for(auto & it : vTypesData)
+        {
+            sTemp = it.c_str();
+
+            sBuild = QString("SELECT id , name FROM %1 ORDER BY id")
+                        .arg(sTemp);
+
+            QSqlQuery oQ(sBuild);
+            sBuild.clear();
+
+//  How about a small title string.
+            sBuild  += "<b> Table Type " + sTemp + "</b> <br>";
+            sTemp.clear();
+
+//  Build the Report String.
+            while(oQ.next())
+            {
+                sBuild +=   "<b>" + oQ.value("id").toString() + "</b>  ";
+                sBuild +=   "Name = " + oQ.value("name").toString() + "<br>";
+                sBuild +=   "<br>" + oSeperator + "<br>";
+
+                oCursor.insertText(sBuild);
+                sBuild.clear();
+            }
+        }
+
+        CreateReportWindow(oReport , "All Types");
 
         return true;
 }
