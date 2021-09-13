@@ -13,14 +13,16 @@ QT    += printsupport
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    reportwindow.cpp
+    reportwindow.cpp  \
+    simplemessagebox.cpp
 
 HEADERS += \
     myinclude.h \
     mlocal.h \
     mainwindow.h \
     myflag.h \
-    reportwindow.h
+    reportwindow.h \
+    simplemessagebox.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

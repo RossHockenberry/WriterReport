@@ -4,6 +4,8 @@
 #include "myinclude.h"
 #include "mlocal.h"
 #include "myflag.h"
+
+//  Forward class definitons.
 class MyFlag;
 
 struct stReportType
@@ -40,6 +42,7 @@ public:
     bool            HandleCharList();
     bool            HandleSceneList();
     bool            HandleTypeList();
+    bool            HandleGroupList();
 
 //  Report Functions.
     bool            ClearReportData();
@@ -48,6 +51,7 @@ public:
     bool            FillReportList();
     bool            FillCharacterList();
     bool            FillSceneList();
+    bool            FillGroupList();
     bool            GetPlaceList();
     bool            GetIdeasList();
     bool            GetWorldsList();
@@ -74,13 +78,12 @@ public:
     bool            FullSagasReport();
     bool            FullThingsReport();
     bool            FullDBHistoryReport();
-    bool            SingleCharacterReport();
-    bool            SingleSceneReport();
-    bool            CharactersInSceneReport();
-    bool            CharactersInGroupReport();
+    bool            CharactersInStoryReport(int);
+    bool            CharactersInSceneReport(int);
+    bool            CharactersInGroupReport(int);
     bool            FullTypesReport();
     bool            SingleTypeReport(std::string);
-    bool            SingleStoryReport();
+    bool            FullGroupsReport();
 
 private:
 //  Layouts.
@@ -140,6 +143,10 @@ private:
     std::string                 sSelectedScene;
     int                         iSelectedScene = 0;
 
+    std::vector<stTypeData>     vGroups;
+    std::string                 sSelectedGroup;
+    int                         iSelectedGroup;
+
     std::vector<stTypeData>     vPlaces;
     std::vector<stTypeData>     vIdeas;
     std::vector<stTypeData>     vWorlds;
@@ -168,8 +175,11 @@ private:
     MyFlag          oTypeWidgetFlag;              //  Used to turn Type list on and off.
     MyFlag          oCharacterFlag;
     MyFlag          oTypeFlag;
+    MyFlag          oGroupFlag;
     MyFlag          oSceneFlag;
 //    MyFlag          oReportFlag;
+
+    SimpleMessageBox    oMb;
 
     int             iNumberTables   = -1;       //  -1 means not open yet.
     int             iReturnRows     = -1;

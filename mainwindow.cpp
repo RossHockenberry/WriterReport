@@ -150,7 +150,14 @@ bool MainWindow::TypeListHandler()
             case    12:
                 HandleTypeList();
                 break;
-                default:
+            case    15:
+                HandleSceneList();
+                break;
+            case    16:
+                HandleGroupList();
+                break;
+
+            default:
                     break;
             }
 
@@ -206,6 +213,26 @@ bool MainWindow::HandleTypeList()
             pSelectedTypeLabel->setVisible(true);
             pSelectedType->setVisible(true);
             FillTypeList();
+        }
+        else
+        {
+            pReportListLayout->invalidate();
+            pTypeList->setVisible(false);
+            pSelectedTypeLabel->setVisible(false);
+            pSelectedType->setVisible(false);
+        }
+        return true;
+}
+
+bool MainWindow::HandleGroupList()
+{
+        pSelectedTypeLabel->setText("Group");
+        if(oGroupFlag.Flip())
+        {
+            pTypeList->setVisible(true);
+            pSelectedTypeLabel->setVisible(true);
+            pSelectedType->setVisible(true);
+            FillGroupList();
         }
         else
         {
@@ -321,6 +348,7 @@ bool MainWindow::FillCharacterList()
     stTypeData  stData;
 
         vTypes.clear();
+        pTypeList->clear();
         QSqlQuery oQ("SELECT char_id , used_name FROM character ORDER BY used_name");
         while(oQ.next())
         {
@@ -343,12 +371,38 @@ bool MainWindow::FillSceneList()
     stTypeData  stData;
 
         vTypes.clear();
+        pTypeList->clear();
         if(iSelectedStory)
             sBuild = QString("SELECT scene_id , name FROM scene WHERE story_id = %1 ORDER BY sequence")
                             .arg(iSelectedStory);
         else
             sBuild = QString("SELECT scene_id , name FROM scene ORDER BY sequence");
 
+
+        QSqlQuery oQ(sBuild);
+        while(oQ.next())
+        {
+            stData.iPosKey = 0;
+            oVariant = oQ.value(0);
+            stData.iKey = oVariant.toInt();
+            oVariant = oQ.value(1);
+            stData.sKeyString = oVariant.toString().toStdString();
+            pTypeList->addItem(oVariant.toString());
+            vTypes.push_back(stData);              //  In the container.
+        }
+
+        return true;
+}
+
+bool MainWindow::FillGroupList()
+{
+    QString     sBuild;
+    QVariant    oVariant;
+    stTypeData  stData;
+
+        vTypes.clear();
+        pTypeList->clear();
+        sBuild = QString("SELECT group_id , name FROM group_type");
 
         QSqlQuery oQ(sBuild);
         while(oQ.next())
@@ -612,7 +666,9 @@ void MainWindow::ExecuteButton()
                 case    3:  FullPlaceReport();          break;
                 case    4:  FullIdeasReport();          break;
                 case    5:  FullWorldsReport();         break;
-                case    6:  FullStoriesReport();        break;
+                case    6:
+                    FullStoriesReport(iSelectedStory);
+                    break;
                 case    7:  FullSagasReport();          break;
                 case    8:  FullThingsReport();         break;
                 case    9:  FullDBHistoryReport();      break;
@@ -620,10 +676,16 @@ void MainWindow::ExecuteButton()
                     SingleTypeReport(sSelectedType);
                     break;
                 case    13: FullTypesReport();          break;
-                case    14: CharactersInSceneReport();  break;
-                case    15: CharactersInSceneReport();  break;
-                case    16: SingleStoryReport();        break;
-
+                case    14:
+                    CharactersInStoryReport(iSelectedStory);
+                    break;
+                case    15:
+                    CharactersInSceneReport(iSelectedScene);
+                    break;
+                case    16:
+                    CharactersInGroupReport(iSelectedGroup);
+                    break;
+                 case    18: FullGroupsReport();         break;
                 default:
                     break;
             }
@@ -676,6 +738,8 @@ void MainWindow::TypeDoubleClicked(QListWidgetItem * pItem)
                     iSelectedCharacter = it.iKey;
                 if(oSceneFlag.Is())
                     iSelectedScene = it.iKey;
+                if(oGroupFlag.Is())
+                    iSelectedGroup = it.iKey;
             }
 
         pSelectedType->setText(sSelectedType.c_str());
@@ -855,7 +919,7 @@ bool MainWindow::FullIdeasReport()
                     " i.description , "
                     " i.origin_date , "
                     " i.type , "
-                    " i.origin_date"
+                    " i.origin_date ,"
                     " i.parent_id"
                     " FROM ideas as i "
                     " ORDER BY i.idea_id";
@@ -935,11 +999,16 @@ bool MainWindow::FullStoriesReport(int iStory)
                     " s.outline , "
                     " s.saga_id ,"
                     " s.word_count "
-                    " FROM story as s "
-                    " ORDER BY s.story_id";
+                    " FROM story as s ";
+
 
         if(iStory > 0)
-            sBuild += QString(" WHERE sc.story_id = %1").arg(iStory);
+        {
+            sBuild += QString(" WHERE s.story_id = %1").arg(iStory);
+            sBuild += " ORDER BY s.story_id";
+        }
+        else
+            sBuild += " ORDER BY s.story_id";
 
 POUT(sBuild.toStdString());
         QSqlQuery oQ(sBuild);
@@ -1039,6 +1108,39 @@ POUT(sBuild.toStdString());
         return true;
 }
 
+bool MainWindow::FullGroupsReport()
+{
+    QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
+
+        sBuild = "SELECT  name , "
+                    " description , "
+                    " origin_date  "
+                    " FROM group_type"
+                    " ORDER BY group_id";
+
+POUT(sBuild.toStdString());
+        QSqlQuery oQ(sBuild);
+        sBuild.clear();
+
+//  Build the report string.
+        while(oQ.next())
+        {
+            sBuild +=   "<b>" + oQ.value("name").toString() + " </b>  <br>";
+            sBuild +=   "Description = " + oQ.value("description").toString() + "<br>";
+               QDateTime   oD = oQ.value("origin_date").toDateTime();
+            sBuild +=   "Origin Date = " + oD.toString() + "<br>";
+            sBuild +=   "<br>" + oSeperator + "<br>";
+
+            oCursor.insertText(sBuild);
+            sBuild.clear();
+        }
+
+        CreateReportWindow(oReport , "Things");
+        return true;
+}
+
 bool MainWindow::FullDBHistoryReport()
 {
     QString sBuild;
@@ -1072,15 +1174,150 @@ POUT(sBuild.toStdString());
         return true;
 }
 
-bool MainWindow::CharactersInSceneReport()
+bool MainWindow::CharactersInStoryReport(int iStory)
 {
+    QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
+    MyFlag  oTempFlag;
 
+//  Make sure they passed a valid Scene id.
+        if(iStory < 1)
+        {
+            oMb.ErrorBox("No Story Selected");
+            return false;
+        }
+
+        sBuild = QString("SELECT DISTINCT st.name ,"
+                    " c.used_name , "
+                    " c.first_name , "
+                    " c.middle_name , "
+                    " c.last_name ,"
+                    " c.family_name "
+                    " FROM scene AS s "
+                    " INNER JOIN scene_char_link AS scl ON s.scene_id = scl.scene_id"
+                    " INNER JOIN character AS c ON c.char_id = scl.char_id"
+                    " INNER JOIN story AS st ON st.story_id = s.story_id"
+                    " WHERE s.story_id = %1"
+                    " ORDER BY c.used_name")
+                        .arg(iStory);
+
+//POUT(sBuild.toStdString());
+        QSqlQuery oQ(sBuild);
+        sBuild.clear();
+
+//  Build the Report String.
+        while(oQ.next())
+        {
+            if(!oTempFlag.Is())
+            {
+                sBuild +=   "<b>" + oQ.value("story.name").toString() + "</b> <br>  ";
+                sBuild +=   "<br>" + oSeperator + "<br>";
+                oTempFlag.SetTrue();
+            }
+            sBuild +=   "<b> Commonly Used Name = " + oQ.value("used_name").toString() + "</b> <br>";
+            sBuild +=   "Full Name = " + oQ.value("character.first_name").toString();
+            sBuild +=   "  " + oQ.value("character.middle_name").toString();
+            sBuild +=   "  " + oQ.value("character.last_name").toString() + "<br>";
+            sBuild +=   "<br>" + oSeperator + "<br>";
+            oCursor.insertText(sBuild);
+            sBuild.clear();
+        }
+
+        CreateReportWindow(oReport , "Characters by Scene");
         return true;
 }
 
-bool MainWindow::CharactersInGroupReport()
+bool MainWindow::CharactersInSceneReport(int iScene)
 {
+    QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
 
+//  Make sure they passed a valid Scene id.
+        if(iScene < 1)
+        {
+            oMb.ErrorBox("No Scene Selected");
+            return false;
+        }
+
+        sBuild = QString("SELECT s.name ,"
+                    " c.used_name , "
+                    " c.first_name , "
+                    " c.middle_name , "
+                    " c.last_name ,"
+                    " c.family_name "
+                    " FROM scene AS s "
+                    " INNER JOIN scene_char_link AS scl ON s.scene_id = scl.scene_id"
+                    " INNER JOIN character AS c ON c.char_id = scl.char_id"
+                    " WHERE scl.scene_id = %1"
+                    " ORDER BY c.used_name")
+                        .arg(iScene);
+
+
+POUT(sBuild.toStdString());
+        QSqlQuery oQ(sBuild);
+        sBuild.clear();
+
+//  Build the Report String.
+        while(oQ.next())
+        {
+            sBuild +=   "<b>" + oQ.value("s.name").toString() + "</b> <br>  ";
+            sBuild +=   "Commonly Used Name = " + oQ.value("used_name").toString() + " <br>";
+            sBuild +=   "Full Name = " + oQ.value("character.first_name").toString();
+            sBuild +=   "  " + oQ.value("character.middle_name").toString();
+            sBuild +=   "  " + oQ.value("character.last_name").toString() + "<br>";
+            sBuild +=   "<br>" + oSeperator + "<br>";
+
+            oCursor.insertText(sBuild);
+            sBuild.clear();
+        }
+
+        CreateReportWindow(oReport , "Characters by Scene");
+            return true;
+}
+
+bool MainWindow::CharactersInGroupReport(int iGroup)
+{
+    QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
+
+        sBuild = QString("SELECT c.char_id , "
+                    " g.group_id , "
+                    " g.name ,"
+                    " c.used_name , "
+                    " c.first_name , "
+                    " c.middle_name , "
+                    " c.last_name ,"
+                    " c.family_name "
+                    " FROM character AS c "
+                    " INNER JOIN group_char_link as gcl ON gcl.char_id = c.char_id"
+                    " INNER JOIN group_type AS g ON g.group_id = gcl.group_id"
+                    " WHERE g.group_id = %1"
+                    " ORDER BY c.used_name")
+                        .arg(iGroup);
+
+
+POUT(sBuild.toStdString());
+        QSqlQuery oQ(sBuild);
+        sBuild.clear();
+
+//  Build the Report String.
+        while(oQ.next())
+        {
+            sBuild +=   "<b>" + oQ.value("group_type.name").toString() + "</b> <br>  ";
+            sBuild +=   "Commonly Used Name = " + oQ.value("used_name").toString() + " <br>";
+            sBuild +=   "Full Name = " + oQ.value("character.first_name").toString();
+            sBuild +=   "  " + oQ.value("character.middle_name").toString();
+            sBuild +=   "  " + oQ.value("character.last_name").toString() + "<br>";
+            sBuild +=   "<br>" + oSeperator + "<br>";
+
+            oCursor.insertText(sBuild);
+            sBuild.clear();
+        }
+
+        CreateReportWindow(oReport , "Charcters by Group");
         return true;
 }
 
@@ -1090,6 +1327,12 @@ bool MainWindow::SingleTypeReport(std::string sTypeName)
     QTextDocument   oReport;
     QTextCursor oCursor(&oReport);
 
+    //  Make sure they passed a valid Scene id.
+        if(sTypeName.empty())
+        {
+            oMb.ErrorBox("No Type Selected");
+            return false;
+        }
         sBuild = QString("SELECT id , name FROM %1 ORDER BY id")
                     .arg(sTypeName.c_str());
 
@@ -1152,23 +1395,6 @@ bool MainWindow::FullTypesReport()
         return true;
 }
 
-bool MainWindow::SingleCharacterReport()
-{
-
-        return true;
-}
-
-bool MainWindow::SingleSceneReport()
-{
-
-        return true;
-}
-
-bool MainWindow::SingleStoryReport()
-{
-
-        return true;
-}
 
 
 
