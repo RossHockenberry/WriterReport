@@ -594,9 +594,9 @@ bool MainWindow::IsDatabaseError()
 
 std::string MainWindow::ReturnDatabaseError()
 {
-    std::string sTemp;          //  String to handle passing error.
-
-        return sTemp;
+    QSqlError oError;
+    
+        return oError.driverText().toStdString();    
 }
 
 //-----------------------------------------------------------------------
