@@ -771,18 +771,26 @@ bool MainWindow::FullCharacterReport(int iStory , int iChar)
                                 " c.seen_as ,"
                                 " c.history ,"
                                 " c.origin_date , "
-                                " sex_pref.name "
+                                " sex_pref.name ,"
+                                " char_type.name "
                                 " FROM scene AS s "
                                 " INNER JOIN scene_char_link AS scl ON s.scene_id = scl.scene_id "
                                 " INNER JOIN character AS c ON c.char_id = scl.char_id"
                                 " INNER JOIN scene as sc ON sc.scene_id = scl.scene_id"
                                 " INNER JOIN sex ON sex.id = c.sex"
-                                " INNER JOIN sex_pref ON sex_pref.id = c.sex_pref"));
+                                " INNER JOIN sex_pref ON sex_pref.id = c.sex_pref"
+                                " INNER JOIN char_type ON char_type.id = c.char_type"));
+
         if(iStory > 0)
         {
             sBuild += QString(" WHERE sc.story_id = %1").arg(iStory);
             if(iChar > 0)
                 sBuild += QString(" AND c.char_id = %1").arg(iChar);
+        }
+        else
+        {
+            if(iChar > 0)
+                sBuild += QString(" WHERE c.char_id = %1").arg(iChar);
         }
 
 POUT(sBuild.toStdString());
@@ -791,8 +799,8 @@ POUT(sBuild.toStdString());
 
         while(oQ.next())
         {
-
-            sBuild +=   QString("<b> " + oQ.value("used_name").toString() + " </b>    Age = ");
+            sBuild +=   QString("<b>" + oQ.value("used_name").toString() + " </b>    ");
+            sBuild +=   oQ.value("char_type.name").toString() + "   Age = ";
             sBuild +=   oQ.value("age").toString() + "   Sex = ";
             sBuild +=   oQ.value("sex.name").toString() + "     Sexual Pref = ";
             sBuild +=   oQ.value("sex_pref.name").toString() + "      Full Name = ";
@@ -801,9 +809,13 @@ POUT(sBuild.toStdString());
             sBuild +=   oQ.value("last_name").toString() + "           Family Name = ";
             sBuild +=   oQ.value("family_name").toString() + "<br>";
             sBuild +=   oQ.value("physical_desc").toString() + "<br>";
+            sBuild +=   "Job = " + oQ.value("job").toString() + "<br>";
             sBuild +=   oQ.value("description").toString() + "<br>";
             sBuild +=   oQ.value("skills").toString() + "<br>";
-            sBuild +=   oQ.value("history").toString() + "<br>";
+            sBuild +=   "Personality = " + oQ.value("personality").toString() + "<br>";
+            sBuild +=   "Life Intent  = " + oQ.value("life_intent").toString() + "<br>";
+            sBuild +=   "Seen As = " + oQ.value("seen_as").toString() + "<br>";
+            sBuild +=   "History = " + oQ.value("history").toString() + "<br>";
             QDateTime   oD = oQ.value("origin_date").toDateTime();
             sBuild +=   "Origin Date = " + oD.toString() + "<br>";
             sBuild +=   "<br>" + oSeperator + "<br>";

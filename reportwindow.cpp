@@ -34,6 +34,7 @@ bool ReportWindow::InitObject()
 {
         pMainView               =   new QTextEdit();
         pMainView->setAcceptRichText(true);
+        pMainView->setReadOnly(true);
 
         pReport                 =   new QTextDocument();
 
