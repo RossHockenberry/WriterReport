@@ -543,7 +543,7 @@ bool MainWindow::OpenDatabase()
 
 //  For now we'll just set things manually.
 /*        sDBName         =   "writers_database";
-        sDBHost         =   "marai";
+        sDBHost         =   "maria";
         sDBAddress      =   "192.168.1.3";
         sDBPort         =   "5432";
         sDBUser         =   "pi";
