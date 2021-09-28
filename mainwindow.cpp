@@ -685,7 +685,8 @@ void MainWindow::ExecuteButton()
                 case    16:
                     CharactersInGroupReport(iSelectedGroup);
                     break;
-                 case    18: FullGroupsReport();         break;
+                case    18: FullGroupsReport();         break;
+                case    19: InitialCharactersInStory(); break;
                 default:
                     break;
             }
@@ -1214,7 +1215,7 @@ bool MainWindow::CharactersInStoryReport(int iStory)
                     " ORDER BY c.used_name")
                         .arg(iStory);
 
-//POUT(sBuild.toStdString());
+POUT(sBuild.toStdString());
         QSqlQuery oQ(sBuild);
         sBuild.clear();
 
@@ -1407,7 +1408,56 @@ bool MainWindow::FullTypesReport()
         return true;
 }
 
+bool MainWindow::InitialCharactersInStory()
+{
+    QString sBuild;
+    QTextDocument   oReport;
+    QTextCursor oCursor(&oReport);
+    MyFlag  oTempFlag;
+
+//  Make sure they passed a valid Scene id.
+        if(iSelectedStory < 1)
+        {
+            oMb.ErrorBox("No Story Selected");
+            return false;
+        }
+
+        sBuild = QString("SELECT DISTINCT "
+                        " c.used_name , "
+                        " c.first_name , "
+                        " c.middle_name , "
+                        " c.last_name ,"
+                        " c.family_name "
+                        " FROM character AS c"
+                        " WHERE c.initial_story = %1"
+                        " ORDER BY c.used_name")
+                       .arg(iSelectedStory);
+
+        QSqlQuery oQ(sBuild);
+POUT(sBuild.toStdString());
+        sBuild.clear();
 
 
+//  Build the Report String.
+        while(oQ.next())
+        {
+            if(!oTempFlag.Is())
+            {
+                sBuild +=   "<b>" + oQ.value("story.name").toString() + "</b> <br>  ";
+                sBuild +=   "<br>" + oSeperator + "<br>";
+                oTempFlag.SetTrue();
+            }
+            sBuild +=   "<b> Commonly Used Name = " + oQ.value("used_name").toString() + "</b> <br>";
+            sBuild +=   "Full Name = " + oQ.value("character.first_name").toString();
+            sBuild +=   "  " + oQ.value("character.middle_name").toString();
+            sBuild +=   "  " + oQ.value("character.last_name").toString() + "<br>";
+            sBuild +=   "<br>" + oSeperator;// + "<br>";
+            oCursor.insertText(sBuild);
+            sBuild.clear();
+        }
+
+        CreateReportWindow(oReport , "Characters by Scene");
+        return true;
+}
 
 

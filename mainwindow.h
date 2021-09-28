@@ -84,6 +84,7 @@ public:
     bool            FullTypesReport();
     bool            SingleTypeReport(std::string);
     bool            FullGroupsReport();
+    bool            InitialCharactersInStory();
 
 private:
 //  Layouts.
