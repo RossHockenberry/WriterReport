@@ -756,7 +756,7 @@ bool MainWindow::FullCharacterReport(int iStory , int iChar)
     QTextDocument   oReport;
     QTextCursor oCursor(&oReport);
 
-        sBuild = (QString("SELECT DISTINCT  c.used_name ,"
+/*        sBuild = (QString("SELECT DISTINCT  c.used_name ,"
                                 " c.first_name ,"
                                 " c.middle_name ,"
                                 " c.last_name , "
@@ -781,10 +781,34 @@ bool MainWindow::FullCharacterReport(int iStory , int iChar)
                                 " INNER JOIN sex ON sex.id = c.sex"
                                 " INNER JOIN sex_pref ON sex_pref.id = c.sex_pref"
                                 " INNER JOIN char_type ON char_type.id = c.char_type"));
+*/
+
+    sBuild = (QString("SELECT DISTINCT  c.used_name ,"
+                            " c.first_name ,"
+                            " c.middle_name ,"
+                            " c.last_name , "
+                            " c.age ,"
+                            " sex.name ,"
+                            " c.physical_desc ,"
+                            " c.family_name ,"
+                            " c.job ,"
+                            " c.description ,"
+                            " c.skills ,"
+                            " c.personality ,"
+                            " c.life_intent ,"
+                            " c.seen_as ,"
+                            " c.history ,"
+                            " c.origin_date , "
+                            " sex_pref.name ,"
+                            " char_type.name "
+                            " FROM character AS c "
+                            " INNER JOIN sex ON sex.id = c.sex"
+                            " INNER JOIN sex_pref ON sex_pref.id = c.sex_pref"
+                            " INNER JOIN char_type ON char_type.id = c.char_type"));
 
         if(iStory > 0)
         {
-            sBuild += QString(" WHERE sc.story_id = %1").arg(iStory);
+            sBuild += QString(" WHERE c.initial_story = %1").arg(iStory);
             if(iChar > 0)
                 sBuild += QString(" AND c.char_id = %1").arg(iChar);
         }
@@ -1427,8 +1451,16 @@ bool MainWindow::InitialCharactersInStory()
                         " c.first_name , "
                         " c.middle_name , "
                         " c.last_name ,"
-                        " c.family_name "
+                        " c.family_name ,"
+                        " c.sex ,"
+                        " c.sex_pref , "
+                        " s.name , "
+                        " sp.name "
                         " FROM character AS c"
+                        " INNER JOIN sex AS s"
+                        " ON c.sex = s.id "
+                        " INNER JOIN sex_pref AS sp"
+                        " ON c.sex_pref = sp.id "
                         " WHERE c.initial_story = %1"
                         " ORDER BY c.used_name")
                        .arg(iSelectedStory);
@@ -1443,15 +1475,17 @@ POUT(sBuild.toStdString());
         {
             if(!oTempFlag.Is())
             {
-                sBuild +=   "<b>" + oQ.value("story.name").toString() + "</b> <br>  ";
+                sBuild +=   "<b>" + QString(sSelectedStory.c_str()) + "</b> <br>  ";
                 sBuild +=   "<br>" + oSeperator + "<br>";
                 oTempFlag.SetTrue();
             }
-            sBuild +=   "<b> Commonly Used Name = " + oQ.value("used_name").toString() + "</b> <br>";
+            sBuild +=   "<b> Commonly Used Name = " + oQ.value("used_name").toString() + "</b>    " ;
             sBuild +=   "Full Name = " + oQ.value("character.first_name").toString();
             sBuild +=   "  " + oQ.value("character.middle_name").toString();
-            sBuild +=   "  " + oQ.value("character.last_name").toString() + "<br>";
-            sBuild +=   "<br>" + oSeperator;// + "<br>";
+            sBuild +=   "  " + oQ.value("character.last_name").toString();
+            sBuild +=   "               Gender and Preference    " + oQ.value("sex.name").toString();
+            sBuild +=   "  " + oQ.value("sex_pref.name").toString() + "<br><br>";
+//            sBuild +=   "<br>" + oSeperator + "<br>";
             oCursor.insertText(sBuild);
             sBuild.clear();
         }
